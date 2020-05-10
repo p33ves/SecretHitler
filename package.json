@@ -1,0 +1,13 @@
+{
+  "name": "secrethitler-bot",
+  "version": "0.0.1",
+  "description": "Bot moderator to play the Secret Hitler - the social deduction board game with your friends on a discord server.",
+  "license": "CC-BY-NC-SA-4.0",
+  "main": "bot.js",
+  "author": "Vignesh Perumal <vignesh.p1110@gmail.com>",
+  "repository": "https://github.com/p33ves/SecretHitler-Bot.git",
+  "dependencies": {
+    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "winston": "^3.2.1"
+  }
+}
