@@ -50,14 +50,17 @@ bot.on('ready', function (evt) {
     logger.info(bot.username + ' - (' + bot.id + ')');
 });
 
+let boardState = false;
+let playerList = []
+
+
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Our bot needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     if (message.substring(0, 3) == 'sh!') {
         let args = message.substring(3).split(' ');
         let cmd = args[0];
-        let boardState = false;
-        let playerList = []
+        
 
         args = args.splice(1);
         switch(cmd) {
@@ -81,8 +84,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
             case 'join':
                 if (boardState) {
-                    
+                    playerList.push(userID)
                 }
+                console.log(playerList)
 
 
             break;
