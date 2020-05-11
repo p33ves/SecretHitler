@@ -51,7 +51,13 @@ bot.on('ready', function (evt) {
 });
 
 let boardState = false;
-let playerList = []
+let playerList = {}
+let messageIDmap = {}
+
+
+async function waitForPost(channelID) {
+    
+}
 
 
 bot.on('message', function (user, userID, channelID, message, evt) {
@@ -66,30 +72,88 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         switch(cmd) {
             // sh!test
             case 'test':
-                bot.sendMessage({
+                bot.uploadFile({
                     to: channelID,
-                    message: dedent(
-                        `*The year is 1932. The place is pre-WWII Germany. 
-                        In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. 
-                        Watch out though— there are secret Fascists among you, and one player is the Secret Hitler.*`)
+                    file: './images/SecretHitler_icon25percent.png',
+                    message: '>>> ***\tWelcome to Secret Hitler!***'
                 });
             break;
 
-            case 'open':
+            case 'open':                
+                /* bot.uploadFile({
+                    to: channelID,
+                    file: './images/SecretHitler_icon25percent.png',
+                    message: '>>> ***\t Welcome to Secret Hitler!***'
+                }, _ => {
+                    bot.sendMessage({
+                        to: channelID,
+                        message:'\n A board has been opened. Please type sh!join if you wish to join the game.'
+                    })
+                }); */
+
+                let numofPlayers = 0;
+
+
+
                 bot.sendMessage({
                     to: channelID,
-                    message:'A board has been opened. Please type sh!join if you wish to join the game.'
+                    embed: {
+                        color: 1752220,
+                        title: '**Players**',
+                        description: 'A board has been opened. Please type sh!join if you wish to join the game.',
+                        /* fields: [{
+                            name: "Check"
+                        }] */
+                    }
+                }, function(err, res) {
+                    messageIDmap.openBoard = res.id;
                 });
+
                 boardState = true;
+
+            break;
 
             case 'join':
                 if (boardState) {
-                    playerList.push(userID)
+                    playerList.userID = user;
+                    bot.editMessage({
+                        channelID: channelID,
+                        messageID: messageIDmap.openBoard,
+                        embed: {
+                            color: 1752220,
+                            title: '**Players**',
+                            description: 'Testing edit',
+                            /* fields: [{
+                                name: ""
+                            }] */
+                        }
+                    });
                 }
-                console.log(playerList)
+                console.log(playerList);
 
 
             break;
+
+            case 'begin':
+                if (boardState) {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: dedent(
+                            `*The year is 1932. The place is pre-WWII Germany. 
+                            In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. 
+                            Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler.*`)
+                    });
+                }
+                
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Board has not been opened yet. Please type sh!open to a game first.'
+                });
+                
+            break;
+
+
+
             // Just add any case commands if you want to..
          }
      }

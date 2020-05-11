@@ -8,6 +8,8 @@
   "repository": "https://github.com/p33ves/SecretHitler-Bot.git",
   "dependencies": {
     "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "nodemon": "^2.0.3",
     "winston": "^3.2.1"
-  }
+  },
+  "scripts": {"start": "nodemon bot.js"}
 }
