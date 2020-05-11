@@ -1,4 +1,4 @@
-
+// @ts-check
 
 const Discord = require('discord.io');
 const logger = require('winston');
@@ -55,8 +55,8 @@ let playerList = {}
 let messageIDmap = {}
 
 
-async function waitForPost(channelID) {
-    
+const dispNames = (playerList) => {
+    return Object.values(playerList).map((user, i) => `${i+1}---*${user}*`).join('\n');
 }
 
 
@@ -93,17 +93,14 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
                 let numofPlayers = 0;
 
-
+                
 
                 bot.sendMessage({
                     to: channelID,
                     embed: {
                         color: 1752220,
                         title: '**Players**',
-                        description: 'A board has been opened. Please type sh!join if you wish to join the game.',
-                        /* fields: [{
-                            name: "Check"
-                        }] */
+                        description: `A board has been opened. Please type sh!join if you wish to join the game.`    
                     }
                 }, function(err, res) {
                     messageIDmap.openBoard = res.id;
@@ -115,17 +112,14 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
             case 'join':
                 if (boardState) {
-                    playerList.userID = user;
+                    playerList[userID] = user;
                     bot.editMessage({
                         channelID: channelID,
                         messageID: messageIDmap.openBoard,
                         embed: {
                             color: 1752220,
                             title: '**Players**',
-                            description: 'Testing edit',
-                            /* fields: [{
-                                name: ""
-                            }] */
+                            description: `A board has been opened. Please type sh!join if you wish to join the game. \n ${dispNames(playerList)}`    
                         }
                     });
                 }
