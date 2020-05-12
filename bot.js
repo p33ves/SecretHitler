@@ -91,9 +91,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     })
                 }); */
 
-                let numofPlayers = 0;
-
-                
+                let numofPlayers = 0;               
 
                 bot.sendMessage({
                     to: channelID,
@@ -123,6 +121,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         }
                     });
                 }
+                else {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: 'Board has not been opened yet. Please type sh!open to a game first.'
+                    });
+                }
                 console.log(playerList);
 
 
@@ -138,11 +142,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler.*`)
                     });
                 }
-                
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Board has not been opened yet. Please type sh!open to a game first.'
-                });
+                else {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: 'Board has not been opened yet. Please type sh!open to a game first.'
+                    });
+                }
                 
             break;
 
