@@ -1,0 +1,29 @@
+Object design
+
+Game:
+    Players[]:
+        playerId
+        playerName
+        role
+        serialNo 
+    Board:
+        boardType
+        failedElectionCount
+        liberalPoliciesPassed
+        facistPoliciesPassed
+        enactPresidentialPower() -- enact Presidential Powers based on boardType
+    Policies:
+        drawPile[]
+        discardPile[]
+        shuffle() -- shuffle the deck at the beginning and whenever the drawPile becomes < 3
+    playerCount
+    President
+    Chancellor
+    prevPresident
+    prevChancellor
+    startGame() -- accept list of players, check valid playerCount
+    assignRoles() -- randomly assign roles to players via DM and sort by serialNo
+    electionBallot() -- President chooses a Chancellor, players vote, when failedElectionCount > 3 enact top policy
+    legislature() -- President picks 3 cards, discards 1 and passes 2 to Chancellor, who enacts 1
+    checkWin() -- check win conditions for all parties
+    
