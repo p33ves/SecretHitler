@@ -34,12 +34,12 @@ async def on_ready():
 @bot.command()
 async def test(ctx):
     welcome_embed = discord.Embed(
-        title="***\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
+        title="***\t\t\t\t\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
     )
     file_embed = discord.File(
-        "images/WelcomeToSecretHitler.png", filename="welcome.png"
+        "images/WelcomeToSecretHitler.jpg", filename="welcome.jpg"
     )
-    welcome_embed.set_image(url="attachment://welcome.png")
+    welcome_embed.set_image(url="attachment://welcome.jpg")
     welcome_embed.set_footer(text=f"Ping: {round(bot.latency * 1000)}ms")
     await ctx.send(file=file_embed, embed=welcome_embed)
 
@@ -53,8 +53,12 @@ async def open(ctx):
         description=f"A board has been opened. Please type sh!join if you wish to join the game.",
         colour=colours["AQUA"],
     )
+    file_embed = discord.File(
+        "images/SecretHitler_Thumbnail.png", filename="thumbnail.jpg"
+    )
     playersEmbed.set_author(name=author.name, icon_url=ctx.author.avatar_url)
-    openMessage = await ctx.send(embed=playersEmbed)
+    playersEmbed.set_thumbnail(url="attachment://thumbnail.jpg")
+    openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
     game.open(channel, author, openMessage)
 
 
@@ -67,7 +71,7 @@ async def join(ctx):
     elif ctx.author not in game.players:
         game.players.add(ctx.author)
         newEmbed = game.openMessage.embeds[-1]
-        newEmbed.add_field(name=str(len(game.players) + 1), value=ctx.author.name)
+        newEmbed.add_field(name=str(len(game.players)), value=ctx.author.name)
         await game.openMessage.edit(embed=newEmbed)
 
 
