@@ -1,3 +1,4 @@
 auth.json
 JavaScript/node_modules/**
 images/**
+.vscode/**
