@@ -1,13 +1,14 @@
 import json
+import random
 
 import discord
 from discord.ext import commands
 
-with open("auth.json", "r") as authFile:
-    token = json.load(authFile)["token"]
+with open("./auth.json", "r") as _authFile:
+    token = json.load(_authFile)["token"]
 
-with open("images/colors.json", "r") as colourFile:
-    colours = json.load(colourFile)
+with open("./images/colors.json", "r") as _colourFile:
+    colours = json.load(_colourFile)
 
 
 class Game:
@@ -17,9 +18,43 @@ class Game:
     def open(self, channel, gameOwner, openMessage):
         self.channel = channel
         self.gameOwner = gameOwner
-        self.active = True
         self.openMessage = openMessage
-        self.players = set()
+        self.active = True
+        self.players = list()
+
+    def checkPlayerCount(self):
+        return len(self.players) > 4 and len(self.players) < 11
+
+    def generateRoles(self):
+        rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
+        reqdRoles = rolesList[: len(self.players)]
+        random.shuffle(self.players)
+        random.shuffle(reqdRoles)
+        for i, p in enumerate(self.players):
+            if reqdRoles[i] == "L":
+                p.role = "Liberal"
+                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 5)}.png"
+            elif reqdRoles[i] == "F":
+                p.role = "Facist"
+                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
+            else:
+                p.role = "Hitler"
+                p.rolePic = f"./images/Role_{p.role}.png"
+
+
+class Player:
+    def __init__(self, name, id, avatar, isbot):
+        self.id = id
+        self.name = name
+        self.avatar = avatar
+        self.isbot = isbot
+
+    def __str__(self):
+        return vars(self)
+
+    @classmethod
+    def from_Discord(cls, user):
+        return cls(user.name, user.id, user.avatar_url, user.bot)
 
 
 client = discord.Client()
@@ -34,10 +69,10 @@ async def on_ready():
 @bot.command()
 async def test(ctx):
     welcome_embed = discord.Embed(
-        title="***\t\t\t\t\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
+        title="***\t\t\t\t\t\t\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
     )
     file_embed = discord.File(
-        "images/WelcomeToSecretHitler.jpg", filename="welcome.jpg"
+        "./images/WelcomeToSecretHitler.jpg", filename="welcome.jpg"
     )
     welcome_embed.set_image(url="attachment://welcome.jpg")
     welcome_embed.set_footer(text=f"Ping: {round(bot.latency * 1000)}ms")
@@ -54,12 +89,12 @@ async def open(ctx):
         colour=colours["AQUA"],
     )
     file_embed = discord.File(
-        "images/SecretHitler_Thumbnail.png", filename="thumbnail.jpg"
+        "./images/SecretHitler_Thumbnail.png", filename="thumbnail.jpg"
     )
-    playersEmbed.set_author(name=author.name, icon_url=ctx.author.avatar_url)
+    playersEmbed.set_author(name=author.name, icon_url=author.avatar_url)
     playersEmbed.set_thumbnail(url="attachment://thumbnail.jpg")
     openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
-    game.open(channel, author, openMessage)
+    game.open(channel, Player.from_Discord(author), openMessage)
 
 
 @bot.command()
@@ -68,19 +103,42 @@ async def join(ctx):
         await ctx.send(
             "Board has not been opened yet. Please type sh!open to a game first."
         )
-    elif ctx.author not in game.players:
-        game.players.add(ctx.author)
-        newEmbed = game.openMessage.embeds[-1]
+    elif ctx.author.id not in [p.id for p in game.players]:
+        game.players.append(Player.from_Discord(ctx.author))
+        newEmbed = game.openMessage.embeds[0]
         newEmbed.add_field(name=str(len(game.players)), value=ctx.author.name)
         await game.openMessage.edit(embed=newEmbed)
 
 
 @bot.command()
 async def begin(ctx):
-    await ctx.send(
-        """
-        *The year is 1932. The place is pre-WWII Germany. In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler.*"""
-    )
+    if game.active == False:
+        await ctx.send(
+            "Board has not been opened yet. Please type sh!open to a game first."
+        )
+    elif game.checkPlayerCount() == False:
+        await ctx.send("Sorry, the game requires player count to be 5-10")
+        for i in range(5):
+            game.players.append(Player(f"Bot{i}", 11110000 + i, None, True))
+    else:
+        await ctx.send(
+            "*The year is 1932. The place is pre-WWII Germany. "
+            "In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. "
+            "Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler. "
+            "Your roles will be sent to you as a Private Message. The future of the world depends on you."
+            "So play wisely and remember, trust* ***no one.***"
+        )
+        game.generateRoles()
+        for player in game.players:
+            if player.isbot == False:
+                user = bot.get_user(player.id)
+                roleEmbed = discord.Embed(
+                    title=f"You are ***{player.role}***", colour=colours["LIGHT_GREY"],
+                )
+                file_embed = discord.File(f"{player.rolePic}", filename="role.png")
+                roleEmbed.set_author(name=user.name, icon_url=user.avatar_url)
+                roleEmbed.set_image(url="attachment://role.png")
+                await user.send(file=file_embed, embed=roleEmbed)
 
 
 game = Game()
