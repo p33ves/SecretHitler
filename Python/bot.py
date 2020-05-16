@@ -5,6 +5,8 @@ import random
 import discord
 from discord.ext import commands
 
+from players import Player
+
 with open("./auth.json", "r") as _authFile:
     token = json.load(_authFile)["token"]
 
@@ -61,19 +63,7 @@ class Game:
                 self.hitler = p.name
 
 
-class Player:
-    def __init__(self, name, id, avatar, isbot):
-        self.id = id
-        self.name = name
-        self.avatar = avatar
-        self.isbot = isbot
 
-    def __str__(self):
-        return vars(self)
-
-    @classmethod
-    def from_Discord(cls, user):
-        return cls(user.name, user.id, user.avatar_url, user.bot)
 
 
 bot = commands.Bot(command_prefix="sh!")
@@ -145,6 +135,7 @@ async def begin(ctx):
         args = ctx.message.content.split()[1:]
         errorFlag = False
         if len(args):
+            noOfBots = 0
             if args[0] == "-autobot":
                 try:
                     if int(args[1]) > 0:
