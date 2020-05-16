@@ -28,8 +28,15 @@ class Game:
     def generateRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
         reqdRoles = rolesList[: len(self.players)]
+        if len(self.players) < 7:
+            self.boardType = 1
+        elif len(self.players) < 9:
+            self.boardType = 2
+        else:
+            self.boardType = 3
         random.shuffle(self.players)
         random.shuffle(reqdRoles)
+        self.facists = set()
         for i, p in enumerate(self.players):
             if reqdRoles[i] == "L":
                 p.role = "Liberal"
@@ -37,9 +44,11 @@ class Game:
             elif reqdRoles[i] == "F":
                 p.role = "Facist"
                 p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
+                self.facists.add(p.name)
             else:
                 p.role = "Hitler"
                 p.rolePic = f"./images/Role_{p.role}.png"
+                self.hitler = p.name
 
 
 class Player:
@@ -132,8 +141,27 @@ async def begin(ctx):
         for player in game.players:
             if player.isbot == False:
                 user = bot.get_user(player.id)
+                if player.role == "Liberal":
+                    desc = "Hope you stand for the principles of liberty, justice and equality before the law."
+                    col = "BLUE"
+                elif player.role == "Facist":
+                    col = "ORANGE"
+                    if game.boardType == 1:
+                        desc = f"Hitler is {game.hitler}"
+                    elif game.boardType == 2:
+                        desc = f"Your fellow facist is {game.facists.difference(set([player.name]))}, Hitler is {game.hitler}"
+                    else:
+                        desc = f"Your fellow facists are {game.facists.difference(set([player.name]))}, Hitler is {game.hitler}"
+                else:
+                    col = "RED"
+                    if game.boardType == 1:
+                        desc = f"{game.facists} is the facist"
+                    else:
+                        desc = "You don't know who the other facists are!"
                 roleEmbed = discord.Embed(
-                    title=f"You are ***{player.role}***", colour=colours["LIGHT_GREY"],
+                    title=f"You are the ***{player.role}***",
+                    colour=colours[col],
+                    description=desc,
                 )
                 file_embed = discord.File(f"{player.rolePic}", filename="role.png")
                 roleEmbed.set_author(name=user.name, icon_url=user.avatar_url)
