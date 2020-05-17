@@ -7,12 +7,10 @@ from discord.ext import commands
 
 from players import Player
 
-with open("./auth.json", "r") as _authFile:
-    token = json.load(_authFile)["token"]
-
-with open("./images/colors.json", "r") as _colourFile:
-    colours = json.load(_colourFile)
-
+game = None
+token = None
+colours = None
+bot = None
 
 class State(enum.Enum):
     Inactive = None
@@ -64,9 +62,6 @@ class Game:
 
 
 
-
-
-bot = commands.Bot(command_prefix="sh!")
 
 
 @bot.event
@@ -127,6 +122,7 @@ async def join(ctx):
 
 @bot.command()
 async def begin(ctx):
+    # TODO: Why check for none here?
     if game.state is None:
         await ctx.send(
             "Board has not been opened yet. Please type sh!open to a game first."
@@ -194,5 +190,22 @@ async def begin(ctx):
         await ctx.send(f"You cannot begin right now because the game is {game.state}")
 
 
-game = Game()
-bot.run(token)
+def main():
+    global token
+    global colours
+    global game
+    global bot
+
+    with open("./auth.json", "r") as _authFile:
+        token = json.load(_authFile)["token"]
+
+    with open("./images/colors.json", "r") as _colourFile:
+        colours = json.load(_colourFile)
+
+    bot = commands.Bot(command_prefix="sh!")
+
+    game = Game()
+
+
+if __name__ == '__main__':
+    main()
