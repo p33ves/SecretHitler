@@ -8,7 +8,6 @@ from discord.ext import commands
 from players import Player
 
 game = None
-token = None
 colours = None
 bot = None
 
@@ -59,9 +58,6 @@ class Game:
                 p.role = "Hitler"
                 p.rolePic = f"./images/Role_{p.role}.png"
                 self.hitler = p.name
-
-
-
 
 
 @bot.event
@@ -190,7 +186,6 @@ async def begin(ctx):
 
 
 def main():
-    global token
     global colours
     global game
     global bot
@@ -202,8 +197,8 @@ def main():
         colours = json.load(_colourFile)
 
     bot = commands.Bot(command_prefix="sh!")
-
     game = Game()
+    bot.run(token)
 
 if __name__ == '__main__':
     main()
