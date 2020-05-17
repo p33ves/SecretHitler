@@ -7,6 +7,13 @@ class Policy(Enum):
     fascist = 1
     liberal = 2
 
+    def getImageUrl(self) -> str:
+        imageUrls = {
+            1: "",
+            2: ""
+        }
+        return imageUrls.get(self.value)
+
 
 class PolicyPile:
     def __init__(self):
@@ -27,9 +34,6 @@ class PolicyPile:
         self.__drawPile.extend(self.__discardPile)
         self.__discardPile.clear()
         random.shuffle(self.__drawPile)
-
-    def peekTop3(self):  # returns the top three cards on the deck
-        return self.__drawPile[0:3]
 
     def draw(self) -> bool:
         # TODO: define Exception
@@ -60,3 +64,6 @@ class PolicyPile:
         self.__cardsInPlay.remove(policy)
         self.__discardPile.append(self.__cardsInPlay)
         self.__cardsInPlay.clear()
+
+    def peekTop3(self):  # returns the top three cards on the deck
+        return self.__drawPile[0:3]

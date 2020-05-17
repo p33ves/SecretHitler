@@ -83,7 +83,7 @@ async def test(ctx):
 
 
 @bot.command()
-async def open(ctx):
+async def start(ctx):
     if game.state != State.Inactive:
         await ctx.send(
             f"A game opened by {game.owner.name} is already in {game.state} state. Please try to join that or try again later."
@@ -107,7 +107,7 @@ async def open(ctx):
 
 @bot.command()
 async def join(ctx):
-    if game.state is None:
+    if game.state == State.Inactive:
         await ctx.send(
             "Board has not been opened yet. Please type sh!open to a game first."
         )
@@ -122,8 +122,7 @@ async def join(ctx):
 
 @bot.command()
 async def begin(ctx):
-    # TODO: Why check for none here?
-    if game.state is None:
+    if game.state == State.Inactive:
         await ctx.send(
             "Board has not been opened yet. Please type sh!open to a game first."
         )
@@ -205,7 +204,6 @@ def main():
     bot = commands.Bot(command_prefix="sh!")
 
     game = Game()
-
 
 if __name__ == '__main__':
     main()
