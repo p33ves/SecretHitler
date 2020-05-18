@@ -8,10 +8,7 @@ class Policy(Enum):
     liberal = 2
 
     def getImageUrl(self) -> str:
-        imageUrls = {
-            1: "",
-            2: ""
-        }
+        imageUrls = {1: "", 2: ""}
         return imageUrls.get(self.value)
 
 
@@ -44,7 +41,7 @@ class PolicyPile:
             self.__shuffle()
             shuffled = True
         for i in range(0, 3):
-            self.__cardsInPlay.append(self.__drawPile.pop(0))
+            self.__cardsInPlay.append(self.__drawPile.pop(i))
         return shuffled
 
     def peekCardsInPlay(self) -> List[Policy]:
