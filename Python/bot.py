@@ -1,18 +1,16 @@
-import enum
 import json
-import random
 
 import discord
 from discord.ext import commands
 
-import board
+from board import *
 from players import Player
 
 game = None
 colours = None
-bot = None
-game = board.Board()
-state = board.BoardState()
+bot = commands.Bot(command_prefix="sh!")
+game = Board()
+state = BoardState.Inactive
 
 
 @bot.event
@@ -142,7 +140,6 @@ async def begin(ctx):
 
 def main():
     global colours
-    global game
     global bot
 
     with open("./auth.json", "r") as _authFile:
@@ -151,7 +148,6 @@ def main():
     with open("./images/colors.json", "r") as _colourFile:
         colours = json.load(_colourFile)
 
-    bot = commands.Bot(command_prefix="sh!")
     bot.run(token)
 
 
