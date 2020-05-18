@@ -40,8 +40,8 @@ class PolicyPile:
         if len(self.__drawPile) < 3:
             self.__shuffle()
             shuffled = True
-        for i in range(0, 3):
-            self.__cardsInPlay.append(self.__drawPile.pop(i))
+        self.__cardsInPlay.extend(self.__drawPile[0:3])
+        self.__drawPile = self.__drawPile[3:]
         return shuffled
 
     def peekCardsInPlay(self) -> List[Policy]:

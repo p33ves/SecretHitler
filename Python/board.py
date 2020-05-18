@@ -1,6 +1,6 @@
 import random
 from enum import Enum
-
+from typing import Type
 
 class BoardState(Enum):
     Inactive = 0
@@ -17,7 +17,7 @@ class Board:
         self.__owner = None
         self.__state = BoardState.Inactive
 
-    def open(self, channel: channel, boardOwner, openMessage):
+    def open(self, channel, boardOwner, openMessage):
         self.__channel = channel
         self.__owner = boardOwner
         self.__openMessage = openMessage
@@ -49,9 +49,9 @@ class Board:
         return self.__type
 
     @state.setter
-    def state(self, newState: str):
+    def state(self, newState: Type[BoardState]):
         # TODO define exception
-        self.__state = BoardState[newState]
+        self.__state = newState
 
     def checkPlayerCount(self) -> bool:
         return len(self.__players) > 4 and len(self.__players) < 11
