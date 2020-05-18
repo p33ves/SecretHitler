@@ -5,59 +5,14 @@ import random
 import discord
 from discord.ext import commands
 
+import board
 from players import Player
 
 game = None
 colours = None
 bot = None
-
-class State(enum.Enum):
-    Inactive = None
-    Open = 1
-    Active = 2
-
-    def __str__(self):
-        return self.name
-
-
-class Game:
-    def __init__(self):
-        self.state = State.Inactive
-
-    def open(self, channel, gameOwner, openMessage):
-        self.channel = channel
-        self.owner = gameOwner
-        self.openMessage = openMessage
-        self.state = State.Open
-        self.players = list()
-
-    def checkPlayerCount(self):
-        return len(self.players) > 4 and len(self.players) < 11
-
-    def generateRoles(self):
-        rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
-        reqdRoles = rolesList[: len(self.players)]
-        if len(self.players) < 7:
-            self.boardType = 1
-        elif len(self.players) < 9:
-            self.boardType = 2
-        else:
-            self.boardType = 3
-        random.shuffle(self.players)
-        random.shuffle(reqdRoles)
-        self.facists = set()
-        for i, p in enumerate(self.players):
-            if reqdRoles[i] == "L":
-                p.role = "Liberal"
-                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 5)}.png"
-            elif reqdRoles[i] == "F":
-                p.role = "Facist"
-                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
-                self.facists.add(p.name)
-            else:
-                p.role = "Hitler"
-                p.rolePic = f"./images/Role_{p.role}.png"
-                self.hitler = p.name
+game = board.Board()
+state = board.BoardState()
 
 
 @bot.event
@@ -79,8 +34,8 @@ async def test(ctx):
 
 
 @bot.command()
-async def start(ctx):
-    if game.state != State.Inactive:
+async def table(ctx):
+    if game.state != state.Inactive:
         await ctx.send(
             f"A game opened by {game.owner.name} is already in {game.state} state. Please try to join that or try again later."
         )
@@ -93,21 +48,21 @@ async def start(ctx):
             colour=colours["AQUA"],
         )
         file_embed = discord.File(
-            "./images/SecretHitler_Thumbnail.png", filename="thumbnail.jpg"
+            "./images/SecretHitler_Thumbnail.png", filename="thumbnail.png"
         )
         playersEmbed.set_author(name=author.name, icon_url=author.avatar_url)
-        playersEmbed.set_thumbnail(url="attachment://thumbnail.jpg")
+        playersEmbed.set_thumbnail(url="attachment://thumbnail.png")
         openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
         game.open(channel, Player.from_Discord(author), openMessage)
 
 
 @bot.command()
 async def join(ctx):
-    if game.state == State.Inactive:
+    if game.state == state.Inactive:
         await ctx.send(
             "Board has not been opened yet. Please type sh!open to a game first."
         )
-    elif game.state != State.Open:
+    elif game.state != state.Open:
         await ctx.send(f"You cannot join right now because the game is {game.state}")
     elif ctx.author.id not in [p.id for p in game.players]:
         game.players.append(Player.from_Discord(ctx.author))
@@ -118,11 +73,11 @@ async def join(ctx):
 
 @bot.command()
 async def begin(ctx):
-    if game.state == State.Inactive:
+    if game.state == state.Inactive:
         await ctx.send(
             "Board has not been opened yet. Please type sh!open to a game first."
         )
-    elif game.state == State.Open:
+    elif game.state == state.Open:
         args = ctx.message.content.split()[1:]
         errorFlag = False
         if len(args):
@@ -150,7 +105,7 @@ async def begin(ctx):
                 "Your roles will be sent to you as a Private Message. The future of the world depends on you."
                 "So play wisely and remember, trust* ***no one.***"
             )
-            game.state = State.Active
+            game.state = state.Active
             game.generateRoles()
             for player in game.players:
                 if player.isbot == False:
@@ -160,15 +115,15 @@ async def begin(ctx):
                         col = "BLUE"
                     elif player.role == "Facist":
                         col = "ORANGE"
-                        if game.boardType == 1:
+                        if game.type == 1:
                             desc = f"Hitler is {game.hitler}"
-                        elif game.boardType == 2:
+                        elif game.type == 2:
                             desc = f"Your fellow facist is {game.facists.difference(set([player.name]))}, Hitler is {game.hitler}"
                         else:
                             desc = f"Your fellow facists are {game.facists.difference(set([player.name]))}, Hitler is {game.hitler}"
                     else:
                         col = "RED"
-                        if game.boardType == 1:
+                        if game.type == 1:
                             desc = f"{game.facists} is the facist"
                         else:
                             desc = "You don't know who the other facists are!"
@@ -197,8 +152,8 @@ def main():
         colours = json.load(_colourFile)
 
     bot = commands.Bot(command_prefix="sh!")
-    game = Game()
     bot.run(token)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
