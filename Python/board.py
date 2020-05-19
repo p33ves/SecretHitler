@@ -2,6 +2,7 @@ import random
 from enum import Enum
 from typing import Type
 
+
 class BoardState(Enum):
     Inactive = 0
     Open = 1
@@ -58,11 +59,11 @@ class Board:
 
     @property
     def facists(self):
-        return set(p for p in self.__players if p.id in self.__facists)
+        return self.__facists
 
     @property
     def hitler(self):
-        return (p for p in self.__players if p.id == self.__hitler)
+        return self.__hitler
 
     def generateRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
@@ -75,7 +76,7 @@ class Board:
             self.__type = 3
         random.shuffle(self.__players)
         random.shuffle(reqdRoles)
-        self.__facists = set()
+        self.__facists = dict()
         for i, p in enumerate(self.__players):
             if reqdRoles[i] == "L":
                 p.role = "Liberal"
@@ -83,8 +84,8 @@ class Board:
             elif reqdRoles[i] == "F":
                 p.role = "Facist"
                 p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
-                self.__facists.add(p.id)
+                self.__facists[p.id] = p.name
             else:
                 p.role = "Hitler"
                 p.rolePic = f"./images/Role_{p.role}.png"
-                self.__hitler = p.id
+                self.__hitler = {p.id: p.name}
