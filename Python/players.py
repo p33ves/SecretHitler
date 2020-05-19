@@ -4,6 +4,8 @@ class Player:
         self.__name = name
         self.__avatar = avatar
         self.__isbot = isbot
+        self.__role = None
+        self.__rolePic = None
 
     def __str__(self):
         return vars(self)
