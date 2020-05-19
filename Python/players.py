@@ -10,7 +10,7 @@ class Player:
 
     @classmethod
     def from_Discord(cls, user):
-        return cls(user.name, user.id, user.avatar_url, user.bot)
+        return cls(user.id, user.name, user.avatar_url, user.bot)
 
     @property
     def id(self) -> str:
