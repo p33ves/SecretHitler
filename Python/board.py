@@ -16,16 +16,26 @@ class BoardState(Enum):
         return self.name
 
 
+class RoundType(Enum):
+    Nomination = 0
+    Election = 1
+    Legislation = 2
+    Execution = 3
+
+    def __str__(self):
+        return self.name
+
+
 class Board:
     def __init__(self):
         self.__channel = None
         self.__owner = None
         self.__state = BoardState.Inactive
 
-    def open(self, channel, boardOwner, openMessage):
+    def open(self, channel, boardOwner, messageToEdit):
         self.__channel = channel
         self.__owner = boardOwner
-        self.__openMessage = openMessage
+        self.__messageToEdit = messageToEdit
         self.__state = BoardState.Open
         self.__players = list()
 
@@ -72,13 +82,20 @@ class Board:
         self.__prevPresidentID = None
         self.__prevChancellorID = None
         self.__gameBoard = f"./images/Board{self.__boardType}.png"
-        self.__roundType = 0
+        self.__roundType = RoundType.Nomination
 
     def nextPresident(self, newIndex=None):
         if newIndex is None:
             newIndex = self.__presidentIndex + 1
         self.__prevPresidentID = self.president.id
         self.__presidentIndex = newIndex
+        self.__prevChancellorID = self.__chancellor.id
+        self.__chancellor = None
+
+    def setChancellor(self, chancellorID):
+        for p in self.__players:
+            if p.id == chancellorID:
+                self.__chancellor = p
 
     @property
     def channel(self):
@@ -93,8 +110,8 @@ class Board:
         return self.__state
 
     @property
-    def openMessage(self):
-        return self.__openMessage
+    def messageToEdit(self):
+        return self.__messageToEdit
 
     @property
     def boardType(self):
@@ -128,6 +145,10 @@ class Board:
     def roundType(self):
         return self.__roundType
 
+    @property
+    def chancellor(self):
+        return self.__chancellor
+
     @state.setter
     def state(self, newState: Type[BoardState]):
         # TODO define exception
@@ -136,3 +157,7 @@ class Board:
     @roundType.setter
     def roundType(self, newInput: int):
         self.__roundType = newInput
+
+    @messageToEdit.setter
+    def messageToEdit(self, message):
+        self.__messageToEdit = message

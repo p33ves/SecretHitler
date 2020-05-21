@@ -3,7 +3,7 @@ import json
 import discord
 from discord.ext import commands
 
-from board import Board, BoardState
+from board import Board, BoardState, RoundType
 from players import Player
 
 with open("./images/colors.json", "r") as _colourFile:
@@ -63,7 +63,7 @@ async def join(ctx):
     else:
         if board.state == BoardState.Inactive:
             await ctx.send(
-                "Board has not been opened yet. Please enter sh!open to a game first."
+                "Board has not been opened yet. Please enter *sh!launch* to a game first."
             )
         elif board.state != BoardState.Open:
             await ctx.send(
@@ -71,11 +71,11 @@ async def join(ctx):
             )
         elif ctx.author.id not in [p.id for p in board.getPlayers()]:
             board.addPlayer(Player.from_Discord(ctx.author))
-            newEmbed = board.openMessage.embeds[0].copy()
+            newEmbed = board.messageToEdit.embeds[0].copy()
             newEmbed.set_image(url="attachment://Banner.jpg")
             newEmbed.add_field(name=board.getPlayerCount(), value=ctx.author.name)
             newEmbed.set_footer(text=f"{board.getPlayerCount()}/10 players joined")
-            await board.openMessage.edit(embed=newEmbed)
+            await board.messageToEdit.edit(embed=newEmbed)
             # await ctx.send(file=None, embed=newEmbed)
 
 
@@ -195,12 +195,51 @@ async def t(ctx):
         await ctx.send(file=file_embed, embed=tableEmbed)
 
 
+@bot.command()
+async def p(ctx):
+    if board.channel.id != ctx.channel.id:
+        await ctx.send(
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
+        )
+    elif board.state != BoardState.Active:
+        await ctx.send(
+            "Board is not been active on this channel. Please retry after activating the game"
+        )
+    elif ctx.author.id != board.president.id:
+        await ctx.send(f"Sorry {ctx.author.name}, you are not the President!")
+    else:
+        args = ctx.message.content.split()[1:]
+        chancellorTag = args[0]
+        if (
+            len(args) > 1
+            or chancellorTag[:3] != "<@!"
+            or chancellorTag[3:-1] not in [p.id for p in board.getPlayers()]
+            or chancellorTag[3:-1] == board.prevChancellorID
+        ):
+            await ctx.send(f"Invalid nomination, please retry!")
+        else:
+            chancellorID = args[0][3:-1]
+            board.setChancellor(chancellorID)
+            await ctx.send(f"{args[0]} has been nominated as the chancellor")
+            board.roundType = RoundType.Election
+            tableEmbed, file_embed = showTable()
+            voteMessage = await ctx.send(file=file_embed, embed=tableEmbed)
+            board.messageToEdit = voteMessage
+
+
 def showTable():
-    tableEmbed = discord.Embed(
-        title=f"**\t President: {board.president.name}  **",
+    if board.roundType == RoundType.Nomination:
         # Remove spaces in below tags when using n bots
-        description=f"<@! {board.president.id} >, please pick the chancellor by typing sh!p @<candidate name>",
-        colour=colours["PURPLE"],
+        desc = f"<@! {board.president.id} >, please pick the chancellor by typing *sh!p @<candidate name>*"
+        col = "PURPLE"
+    elif board.roundType == RoundType.Nomination:
+        # Remove spaces in below tags when using n bots
+        desc = f"All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
+        col = "GREY"
+    tableEmbed = discord.Embed(
+        title=f"***\t {board.roundType} Stage***",
+        description=desc,
+        colour=colours[col],
     )
     file_embed = discord.File(board.gameBoard, filename="board.png")
     """
@@ -212,16 +251,19 @@ def showTable():
     for p in board.getPlayers():
         if p.id == board.president.id:
             val = "Current President"
+        elif p.id == board.chancellor.id:
+            val = "Current Chancellor"
         elif p.id == board.prevChancellorID:
             val = "Previous Chancellor"
         elif p.id == board.prevPresidentID:
             val = "Previous President"
-        elif board.roundType == 0:
+        elif board.roundType == RoundType.Nomination:
             val = "Waiting for chancellor nomination"
+        elif board.roundType == RoundType.Election:
+            val = "Yet to vote"
         tableEmbed.add_field(name=p.name, value=val)
     tableEmbed.set_image(url="attachment://board.png")
     return (tableEmbed, file_embed)
-    # game.open(channel, Player.from_Discord(author), openMessage)
 
 
 def main():
