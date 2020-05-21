@@ -2,6 +2,8 @@ import random
 from enum import Enum
 from typing import boardType
 
+from players import Player
+
 # from PIL import Image
 
 
@@ -27,8 +29,19 @@ class Board:
         self.__state = BoardState.Open
         self.__players = list()
 
-    def checkPlayerCount(self) -> bool:
-        return len(self.__players) > 4 and len(self.__players) < 11
+    def addPlayer(self, player: Player):
+        if len(self.__players) > 9:
+            raise Exception
+        self.__players.append(player)
+
+    def hasEnoughPlayers(self) -> bool:
+        return len(self.__players) > 4
+
+    def getPlayers(self):
+        return self.__players.copy()
+
+    def getPlayerCount(self) -> int:
+        return len(self.__players)
 
     def generateRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
@@ -78,10 +91,6 @@ class Board:
     @property
     def state(self) -> BoardState:
         return self.__state
-
-    @property
-    def players(self):
-        return self.__players
 
     @property
     def openMessage(self):

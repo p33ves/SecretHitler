@@ -10,7 +10,7 @@ with open("./images/colors.json", "r") as _colourFile:
     colours = json.load(_colourFile)
 
 bot = commands.Bot(command_prefix="sh!")
-game = Board()
+board = Board()
 
 
 @bot.event
@@ -36,9 +36,9 @@ async def test(ctx):
 
 @bot.command()
 async def launch(ctx):
-    if game.state != BoardState.Inactive:
+    if board.state != BoardState.Inactive:
         await ctx.send(
-            f"A game opened by {game.owner.name} is already in {game.state} state. Please try to join that or try again later."
+            f"A game opened by {board.owner.name} is already in {board.state} state. Please try to join that or try again later."
         )
     else:
         author = ctx.author
@@ -54,45 +54,45 @@ async def launch(ctx):
         playersEmbed.set_author(name=author.name, icon_url=author.avatar_url)
         playersEmbed.set_thumbnail(url="attachment://thumbnail.png")
         openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
-        game.open(channel, Player.from_Discord(author), openMessage)
+        board.open(channel, Player.from_Discord(author), openMessage)
 
 
 @bot.command()
 async def join(ctx):
-    if game.channel.id != ctx.channel.id:
+    if board.channel.id != ctx.channel.id:
         await ctx.send(
-            f"Board has not been opened on this channel. Please ask {game.owner.name} for directions"
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
     else:
-        if game.state == BoardState.Inactive:
+        if board.state == BoardState.Inactive:
             await ctx.send(
                 "Board has not been opened yet. Please enter sh!open to a game first."
             )
-        elif game.state != BoardState.Open:
+        elif board.state != BoardState.Open:
             await ctx.send(
-                f"You cannot join right now because the game is {game.state}"
+                f"You cannot join right now because the game is {board.state}"
             )
-        elif ctx.author.id not in [p.id for p in game.players]:
-            game.players.append(Player.from_Discord(ctx.author))
-            newEmbed = game.openMessage.embeds[0]
-            newEmbed.add_field(name=str(len(game.players)), value=ctx.author.name)
-            await game.openMessage.edit(embed=newEmbed)
+        elif ctx.author.id not in [p.id for p in board.players]:
+            board.players.append(Player.from_Discord(ctx.author))
+            newEmbed = board.openMessage.embeds[0]
+            newEmbed.add_field(name=str(len(board.players)), value=ctx.author.name)
+            await board.openMessage.edit(embed=newEmbed)
 
 
 @bot.command()
 async def begin(ctx):
-    if game.channel.id != ctx.channel.id:
+    if board.channel.id != ctx.channel.id:
         await ctx.send(
-            f"Board has not been opened on this channel. Please ask {game.owner.name} for directions"
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
     else:
-        if game.state == BoardState.Inactive:
+        if board.state == BoardState.Inactive:
             await ctx.send(
                 "Board has not been opened yet. Please enter sh!open to a game first."
             )
-        elif game.state != BoardState.Open:
+        elif board.state != BoardState.Open:
             await ctx.send(
-                f"You cannot begin right now because the game is {game.state}"
+                f"You cannot begin right now because the game is {board.state}"
             )
         else:
             args = ctx.message.content.split()[1:]
@@ -103,7 +103,7 @@ async def begin(ctx):
                     try:
                         if int(args[1]) > 0:
                             noOfBots = int(args[1])
-                    except:
+                    except IndexError:
                         errorFlag = True
                 else:
                     errorFlag = True
@@ -111,8 +111,10 @@ async def begin(ctx):
                     await ctx.send("Invalid argument!")
                 else:
                     for i in range(noOfBots):
-                        game.players.append(Player(11110000 + i, f"Bot{i}", None, True))
-            if game.checkPlayerCount() == False:
+                        board.addPlayer(
+                            Player(str(11110000 + i), f"Bot{i}", None, True)
+                        )
+            if not board.hasEnoughPlayers():
                 await ctx.send("Sorry, the game requires player count to be 5-10")
             else:
                 await ctx.send(
@@ -122,9 +124,9 @@ async def begin(ctx):
                     "Your roles will be sent to you as a Private Message. The future of the world depends on you."
                     "So play wisely and remember, trust* ***no one.***"
                 )
-                game.state = BoardState.Active
-                game.generateRoles()
-                for player in game.players:
+                board.state = BoardState.Active
+                board.generateRoles()
+                for player in board.getPlayers():
                     if player.isbot == False:
                         user = bot.get_user(player.id)
                         if player.role == "Liberal":
@@ -132,19 +134,19 @@ async def begin(ctx):
                             col = "BLUE"
                         elif player.role == "Facist":
                             col = "ORANGE"
-                            if game.boardType == 1:
+                            if board.boardType == 1:
                                 desc = (
-                                    f"Hitler is ***{list(game.hitler.values())[0]}***"
+                                    f"Hitler is ***{list(board.hitler.values())[0]}***"
                                 )
-                            elif game.boardType == 2:
-                                desc = f"Your fellow facist is *{[val for key, val in game.facists.items() if key != player.id]}*, Hitler is ***{list(game.hitler.values())[0]}***"
+                            elif board.boardType == 2:
+                                desc = f"Your fellow facist is *{[val for key, val in board.facists.items() if key != player.id]}*, Hitler is ***{list(board.hitler.values())[0]}***"
                             else:
-                                desc = f"Your fellow facists are *{[val for key, val in game.facists.items() if key != player.id]}*, Hitler is ***{list(game.hitler.values())[0]}***"
+                                desc = f"Your fellow facists are *{[val for key, val in board.facists.items() if key != player.id]}*, Hitler is ***{list(board.hitler.values())[0]}***"
                         else:
                             col = "RED"
-                            if game.boardType == 1:
+                            if board.boardType == 1:
                                 desc = (
-                                    f"*{list(game.facists.values())[0]}* is the facist"
+                                    f"*{list(board.facists.values())[0]}* is the facist"
                                 )
                             else:
                                 desc = "You don't know who the other facists are!"
@@ -165,11 +167,11 @@ async def begin(ctx):
 
 @bot.command()
 async def table(ctx):
-    if game.channel.id != ctx.channel.id:
+    if board.channel.id != ctx.channel.id:
         await ctx.send(
-            f"Board has not been opened on this channel. Please ask {game.owner.name} for directions"
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
-    elif game.state != BoardState.Active:
+    elif board.state != BoardState.Active:
         await ctx.send(
             "Board is not been active on this channel. Please retry after activating the game"
         )
@@ -180,11 +182,11 @@ async def table(ctx):
 
 @bot.command()
 async def t(ctx):
-    if game.channel.id != ctx.channel.id:
+    if board.channel.id != ctx.channel.id:
         await ctx.send(
-            f"Board has not been opened on this channel. Please ask {game.owner.name} for directions"
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
-    elif game.state != BoardState.Active:
+    elif board.state != BoardState.Active:
         await ctx.send(
             "Board is not been active on this channel. Please retry after activating the game"
         )
@@ -195,26 +197,26 @@ async def t(ctx):
 
 def showTable():
     tableEmbed = discord.Embed(
-        title=f"**\t President: {game.president.name}  **",
+        title=f"**\t President: {board.president.name}  **",
         # Remove spaces in below tags when using n bots
-        description=f"<@! {game.president.id} >, please pick the chancellor by typing sh!p @<candidate name>",
+        description=f"<@! {board.president.id} >, please pick the chancellor by typing sh!p @<candidate name>",
         colour=colours["PURPLE"],
     )
-    file_embed = discord.File(game.gameBoard, filename="board.png")
+    file_embed = discord.File(board.gameBoard, filename="board.png")
     """
     Commented due to presence of bots
     tableEmbed.set_author(
         name=game.president.name, icon_url=game.president.avatar
     )
     """
-    for p in game.players:
-        if p.id == game.president.id:
+    for p in board.getPlayers():
+        if p.id == board.president.id:
             val = "Current President"
-        elif p.id == game.prevChancellorID:
+        elif p.id == board.prevChancellorID:
             val = "Previous Chancellor"
-        elif p.id == game.prevPresidentID:
+        elif p.id == board.prevPresidentID:
             val = "Previous President"
-        elif game.roundType == 0:
+        elif board.roundType == 0:
             val = "Waiting for chancellor nomination"
         tableEmbed.add_field(name=p.name, value=val)
     tableEmbed.set_image(url="attachment://board.png")
