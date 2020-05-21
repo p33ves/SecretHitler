@@ -129,7 +129,7 @@ class Board:
         return self.__roundType
 
     @state.setter
-    def state(self, newState: boardType[BoardState]):
+    def state(self, newState: Type[BoardState]):
         # TODO define exception
         self.__state = newState
 
