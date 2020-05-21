@@ -21,12 +21,10 @@ async def on_ready():
 @bot.command()
 async def test(ctx):
     welcome_embed = discord.Embed(
-        title="***\t\t\t\t\t\t\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
+        title="***\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
     )
-    file_embed = discord.File(
-        "./images/WelcomeToSecretHitler.jpg", filename="welcome.jpg"
-    )
-    welcome_embed.set_image(url="attachment://welcome.jpg")
+    file_embed = discord.File("./images/Thumbnail.png", filename="welcome.png")
+    welcome_embed.set_image(url="attachment://welcome.png")
     welcome_embed.set_footer(
         text=f"@{ctx.author.name}, your Ping is: {round(bot.latency * 1000)}ms"
     )
@@ -48,11 +46,10 @@ async def launch(ctx):
             description="A board has been opened. Please enter sh!join if you wish to join the game.",
             colour=colours["AQUA"],
         )
-        file_embed = discord.File(
-            "./images/SecretHitler_Thumbnail.png", filename="thumbnail.png"
-        )
+        file_embed = discord.File("./images/Banner.jpg", filename="Banner.jpg")
         playersEmbed.set_author(name=author.name, icon_url=author.avatar_url)
-        playersEmbed.set_thumbnail(url="attachment://thumbnail.png")
+        playersEmbed.set_image(url="attachment://Banner.jpg")
+        playersEmbed.set_footer(text="Player limit: 5-10")
         openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
         board.open(channel, Player.from_Discord(author), openMessage)
 
@@ -72,11 +69,14 @@ async def join(ctx):
             await ctx.send(
                 f"You cannot join right now because the game is {board.state}"
             )
-        elif ctx.author.id not in [p.id for p in board.players]:
-            board.players.append(Player.from_Discord(ctx.author))
-            newEmbed = board.openMessage.embeds[0]
-            newEmbed.add_field(name=str(len(board.players)), value=ctx.author.name)
+        elif ctx.author.id not in [p.id for p in board.getPlayers()]:
+            board.addPlayer(Player.from_Discord(ctx.author))
+            newEmbed = board.openMessage.embeds[0].copy()
+            newEmbed.set_image(url="attachment://Banner.jpg")
+            newEmbed.add_field(name=board.getPlayerCount(), value=ctx.author.name)
+            newEmbed.set_footer(text=f"{board.getPlayerCount()}/10 players joined")
             await board.openMessage.edit(embed=newEmbed)
+            # await ctx.send(file=None, embed=newEmbed)
 
 
 @bot.command()
