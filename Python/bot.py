@@ -45,7 +45,7 @@ async def launch(ctx):
         channel = ctx.channel
         playersEmbed = discord.Embed(
             title="**\t Player List **",
-            description=f"A board has been opened. Please type sh!join if you wish to join the game.",
+            description="A board has been opened. Please enter sh!join if you wish to join the game.",
             colour=colours["AQUA"],
         )
         file_embed = discord.File(
@@ -66,7 +66,7 @@ async def join(ctx):
     else:
         if game.state == BoardState.Inactive:
             await ctx.send(
-                "Board has not been opened yet. Please type sh!open to a game first."
+                "Board has not been opened yet. Please enter sh!open to a game first."
             )
         elif game.state != BoardState.Open:
             await ctx.send(
@@ -88,7 +88,7 @@ async def begin(ctx):
     else:
         if game.state == BoardState.Inactive:
             await ctx.send(
-                "Board has not been opened yet. Please type sh!open to a game first."
+                "Board has not been opened yet. Please enter sh!open to a game first."
             )
         elif game.state != BoardState.Open:
             await ctx.send(
@@ -132,17 +132,17 @@ async def begin(ctx):
                             col = "BLUE"
                         elif player.role == "Facist":
                             col = "ORANGE"
-                            if game.type == 1:
+                            if game.boardType == 1:
                                 desc = (
                                     f"Hitler is ***{list(game.hitler.values())[0]}***"
                                 )
-                            elif game.type == 2:
+                            elif game.boardType == 2:
                                 desc = f"Your fellow facist is *{[val for key, val in game.facists.items() if key != player.id]}*, Hitler is ***{list(game.hitler.values())[0]}***"
                             else:
                                 desc = f"Your fellow facists are *{[val for key, val in game.facists.items() if key != player.id]}*, Hitler is ***{list(game.hitler.values())[0]}***"
                         else:
                             col = "RED"
-                            if game.type == 1:
+                            if game.boardType == 1:
                                 desc = (
                                     f"*{list(game.facists.values())[0]}* is the facist"
                                 )
@@ -159,15 +159,70 @@ async def begin(ctx):
                         roleEmbed.set_author(name=user.name, icon_url=user.avatar_url)
                         roleEmbed.set_image(url="attachment://role.png")
                         await user.send(file=file_embed, embed=roleEmbed)
+                tableEmbed, file_embed = showTable()
+                await ctx.send(file=file_embed, embed=tableEmbed)
 
 
 @bot.command()
 async def table(ctx):
-    pass
+    if game.channel.id != ctx.channel.id:
+        await ctx.send(
+            f"Board has not been opened on this channel. Please ask {game.owner.name} for directions"
+        )
+    elif game.state != BoardState.Active:
+        await ctx.send(
+            "Board is not been active on this channel. Please retry after activating the game"
+        )
+    else:
+        tableEmbed, file_embed = showTable()
+        await ctx.send(file=file_embed, embed=tableEmbed)
+
+
+@bot.command()
+async def t(ctx):
+    if game.channel.id != ctx.channel.id:
+        await ctx.send(
+            f"Board has not been opened on this channel. Please ask {game.owner.name} for directions"
+        )
+    elif game.state != BoardState.Active:
+        await ctx.send(
+            "Board is not been active on this channel. Please retry after activating the game"
+        )
+    else:
+        tableEmbed, file_embed = showTable()
+        await ctx.send(file=file_embed, embed=tableEmbed)
+
+
+def showTable():
+    tableEmbed = discord.Embed(
+        title=f"**\t President: {game.president.name}  **",
+        # Remove spaces in below tags when using n bots
+        description=f"<@! {game.president.id} >, please pick the chancellor by typing sh!p @<candidate name>",
+        colour=colours["PURPLE"],
+    )
+    file_embed = discord.File(game.gameBoard, filename="board.png")
+    """
+    Commented due to presence of bots
+    tableEmbed.set_author(
+        name=game.president.name, icon_url=game.president.avatar
+    )
+    """
+    for p in game.players:
+        if p.id == game.president.id:
+            val = "Current President"
+        elif p.id == game.prevChancellorID:
+            val = "Previous Chancellor"
+        elif p.id == game.prevPresidentID:
+            val = "Previous President"
+        elif game.roundType == 0:
+            val = "Waiting for chancellor nomination"
+        tableEmbed.add_field(name=p.name, value=val)
+    tableEmbed.set_image(url="attachment://board.png")
+    return (tableEmbed, file_embed)
+    # game.open(channel, Player.from_Discord(author), openMessage)
 
 
 def main():
-
     with open("./auth.json", "r") as _authFile:
         token = json.load(_authFile)["token"]
 

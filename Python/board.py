@@ -1,6 +1,8 @@
 import random
 from enum import Enum
-from typing import Type
+from typing import boardType
+
+# from PIL import Image
 
 
 class BoardState(Enum):
@@ -25,6 +27,46 @@ class Board:
         self.__state = BoardState.Open
         self.__players = list()
 
+    def checkPlayerCount(self) -> bool:
+        return len(self.__players) > 4 and len(self.__players) < 11
+
+    def generateRoles(self):
+        rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
+        reqdRoles = rolesList[: len(self.__players)]
+        if len(self.__players) < 7:
+            self.__boardType = 1
+        elif len(self.__players) < 9:
+            self.__boardType = 2
+        else:
+            self.__boardType = 3
+        random.shuffle(self.__players)
+        random.shuffle(reqdRoles)
+        self.__facists = dict()
+        for i, p in enumerate(self.__players):
+            if reqdRoles[i] == "L":
+                p.role = "Liberal"
+                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 5)}.png"
+            elif reqdRoles[i] == "F":
+                p.role = "Facist"
+                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
+                self.__facists[p.id] = p.name
+            else:
+                p.role = "Hitler"
+                p.rolePic = f"./images/Role_{p.role}.png"
+                self.__hitler = {p.id: p.name}
+        self.__presidentIndex = 0
+        self.__chancellor = None
+        self.__prevPresidentID = None
+        self.__prevChancellorID = None
+        self.__gameBoard = f"./images/Board{self.__boardType}.png"
+        self.__roundType = 0
+
+    def nextPresident(self, newIndex=None):
+        if newIndex is None:
+            newIndex = self.__presidentIndex + 1
+        self.__prevPresidentID = self.president.id
+        self.__presidentIndex = newIndex
+
     @property
     def channel(self):
         return self.__channel
@@ -46,16 +88,8 @@ class Board:
         return self.__openMessage
 
     @property
-    def type(self):
-        return self.__type
-
-    @state.setter
-    def state(self, newState: Type[BoardState]):
-        # TODO define exception
-        self.__state = newState
-
-    def checkPlayerCount(self) -> bool:
-        return len(self.__players) > 4 and len(self.__players) < 11
+    def boardType(self):
+        return self.__boardType
 
     @property
     def facists(self):
@@ -65,27 +99,31 @@ class Board:
     def hitler(self):
         return self.__hitler
 
-    def generateRoles(self):
-        rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
-        reqdRoles = rolesList[: len(self.__players)]
-        if len(self.__players) < 7:
-            self.__type = 1
-        elif len(self.__players) < 9:
-            self.__type = 2
-        else:
-            self.__type = 3
-        random.shuffle(self.__players)
-        random.shuffle(reqdRoles)
-        self.__facists = dict()
-        for i, p in enumerate(self.__players):
-            if reqdRoles[i] == "L":
-                p.role = "Liberal"
-                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 5)}.png"
-            elif reqdRoles[i] == "F":
-                p.role = "Facist"
-                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
-                self.__facists[p.id] = p.name
-            else:
-                p.role = "Hitler"
-                p.rolePic = f"./images/Role_{p.role}.png"
-                self.__hitler = {p.id: p.name}
+    @property
+    def president(self):
+        return self.__players[self.__presidentIndex]
+
+    @property
+    def gameBoard(self):
+        return self.__gameBoard
+
+    @property
+    def prevPresidentID(self):
+        return self.__prevPresidentID
+
+    @property
+    def prevChancellorID(self):
+        return self.__prevChancellorID
+
+    @property
+    def roundType(self):
+        return self.__roundType
+
+    @state.setter
+    def state(self, newState: boardType[BoardState]):
+        # TODO define exception
+        self.__state = newState
+
+    @roundType.setter
+    def roundType(self, newInput: int):
+        self.__roundType = newInput
