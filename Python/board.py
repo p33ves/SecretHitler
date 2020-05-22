@@ -2,7 +2,12 @@ import random
 from enum import Enum
 from typing import Type
 
+import discord
+from discord import Embed, File
+
 from players import Player
+from static_data import colours
+
 
 # from PIL import Image
 
@@ -26,18 +31,31 @@ class RoundType(Enum):
         return self.name
 
 
+class BoardType(Enum):
+    FiveToSix = 1
+    SevenToEight = 2
+    NineToTen = 3
+
+
 class Board:
     def __init__(self):
         self.__channel = None
         self.__owner = None
         self.__state = BoardState.Inactive
+        self.__messageToEdit = None
+        self.__players = list()
+        self.__presidentIndex = 0
+        self.__chancellor = None
+        self.__prevPresidentID = None
+        self.__prevChancellorID = None
+        self.__gameBoard = None
+        self.__roundType = RoundType.Nomination
 
     def open(self, channel, boardOwner, messageToEdit):
         self.__channel = channel
         self.__owner = boardOwner
         self.__messageToEdit = messageToEdit
         self.__state = BoardState.Open
-        self.__players = list()
 
     def addPlayer(self, player: Player):
         if len(self.__players) > 9:
@@ -53,15 +71,15 @@ class Board:
     def getPlayerCount(self) -> int:
         return len(self.__players)
 
-    def generateRoles(self):
+    def generateAndSendRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
         reqdRoles = rolesList[: len(self.__players)]
         if len(self.__players) < 7:
-            self.__boardType = 1
+            self.__boardType = BoardType.FiveToSix
         elif len(self.__players) < 9:
-            self.__boardType = 2
+            self.__boardType = BoardType.SevenToEight
         else:
-            self.__boardType = 3
+            self.__boardType = BoardType.NineToTen
         random.shuffle(self.__players)
         random.shuffle(reqdRoles)
         self.__facists = dict()
@@ -77,12 +95,43 @@ class Board:
                 p.role = "Hitler"
                 p.rolePic = f"./images/Role_{p.role}.png"
                 self.__hitler = {p.id: p.name}
-        self.__presidentIndex = 0
-        self.__chancellor = None
-        self.__prevPresidentID = None
-        self.__prevChancellorID = None
-        self.__gameBoard = f"./images/Board{self.__boardType}.png"
-        self.__roundType = RoundType.Nomination
+        self.__gameBoard = f"./images/Board{self.boardType.value}.png"
+        self.__sendRoles()
+
+    def __sendRoles(self):
+        for player in self.__players:
+            if player.role == "Liberal":
+                desc = "For justice, liberty and equality!"
+                col = "BLUE"
+            elif player.role == "Facist":
+                col = "ORANGE"
+                if self.__boardType == BoardType.FiveToSix:
+                    desc = (
+                        f"Hitler is ***{list(self.hitler.values())[0]}***"
+                    )
+                elif self.__boardType == BoardType.SevenToEight:
+                    desc = f"Your fellow facist is *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
+                else:
+                    desc = f"Your fellow facists are *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
+            else:
+                col = "RED"
+                if self.__boardType == BoardType.SevenToEight:
+                    desc = (
+                        f"*{list(self.facists.values())[0]}* is the facist"
+                    )
+                else:
+                    desc = "You don't know who the other facists are!"
+            roleEmbed = Embed(
+                title=f"You are the ***{player.role}***",
+                colour=colours[col],
+                description=desc,
+            )
+            file_embed = File(
+                f"{player.rolePic}", filename="role.png"
+            )
+            roleEmbed.set_author(name=player.name, icon_url=player.avatar_url)
+            roleEmbed.set_image(url="attachment://role.png")
+            player.send(file_embed, roleEmbed)
 
     def nextPresident(self, newIndex=None):
         if newIndex is None:
@@ -96,6 +145,45 @@ class Board:
         for p in self.__players:
             if p.id == chancellorID:
                 self.__chancellor = p
+
+    def getTableEmbed(self):
+        if self.roundType == RoundType.Nomination:
+            # Remove spaces in below tags when using n bots
+            desc = f"<@! {self.president.id} >, please pick the chancellor by typing *sh!p @<candidate name>*"
+            col = "PURPLE"
+        elif self.roundType == RoundType.Election:
+            # Remove spaces in below tags when using n bots
+            desc = f"All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
+            col = "GREY"
+        tableEmbed = discord.Embed(
+            title=f"***\t {self.roundType} Stage***",
+            description=desc,
+            colour=colours[col],
+        )
+        file_embed = discord.File(self.gameBoard, filename="board.png")
+        """
+        Commented due to presence of bots
+        tableEmbed.set_author(
+            name=game.president.name, icon_url=game.president.avatar
+        )
+        """
+        for p in self.getPlayers():
+            if p.id == self.president.id:
+                val = "Current President"
+            elif p.id == self.chancellor.id:
+                val = "Current Chancellor"
+            elif p.id == self.prevChancellorID:
+                val = "Previous Chancellor"
+            elif p.id == self.prevPresidentID:
+                val = "Previous President"
+            elif self.roundType == RoundType.Nomination:
+                val = "Waiting for chancellor nomination"
+            elif self.roundType == RoundType.Election:
+                val = "Yet to vote"
+            tableEmbed.add_field(name=p.name, value=val)
+        tableEmbed.set_image(url="attachment://board.png")
+        return tableEmbed, file_embed
+
 
     @property
     def channel(self):

@@ -112,7 +112,7 @@ async def begin(ctx):
                 else:
                     for i in range(noOfBots):
                         board.addPlayer(
-                            Player(str(11110000 + i), f"Bot{i}", None, True)
+                            Player(str(11110000 + i), f"Bot{i}", "", True, None)
                         )
             if not board.hasEnoughPlayers():
                 await ctx.send("Sorry, the game requires player count to be 5-10")
@@ -125,43 +125,8 @@ async def begin(ctx):
                     "So play wisely and remember, trust* ***no one.***"
                 )
                 board.state = BoardState.Active
-                board.generateRoles()
-                for player in board.getPlayers():
-                    if player.isbot == False:
-                        user = bot.get_user(player.id)
-                        if player.role == "Liberal":
-                            desc = "For justice, liberty and equality!"
-                            col = "BLUE"
-                        elif player.role == "Facist":
-                            col = "ORANGE"
-                            if board.boardType == 1:
-                                desc = (
-                                    f"Hitler is ***{list(board.hitler.values())[0]}***"
-                                )
-                            elif board.boardType == 2:
-                                desc = f"Your fellow facist is *{[val for key, val in board.facists.items() if key != player.id]}*, Hitler is ***{list(board.hitler.values())[0]}***"
-                            else:
-                                desc = f"Your fellow facists are *{[val for key, val in board.facists.items() if key != player.id]}*, Hitler is ***{list(board.hitler.values())[0]}***"
-                        else:
-                            col = "RED"
-                            if board.boardType == 1:
-                                desc = (
-                                    f"*{list(board.facists.values())[0]}* is the facist"
-                                )
-                            else:
-                                desc = "You don't know who the other facists are!"
-                        roleEmbed = discord.Embed(
-                            title=f"You are the ***{player.role}***",
-                            colour=colours[col],
-                            description=desc,
-                        )
-                        file_embed = discord.File(
-                            f"{player.rolePic}", filename="role.png"
-                        )
-                        roleEmbed.set_author(name=user.name, icon_url=user.avatar_url)
-                        roleEmbed.set_image(url="attachment://role.png")
-                        await user.send(file=file_embed, embed=roleEmbed)
-                tableEmbed, file_embed = showTable()
+                board.generateAndSendRoles()
+                tableEmbed, file_embed = board.getTableEmbed()
                 await ctx.send(file=file_embed, embed=tableEmbed)
 
 
@@ -176,7 +141,7 @@ async def table(ctx):
             "Board is not been active on this channel. Please retry after activating the game"
         )
     else:
-        tableEmbed, file_embed = showTable()
+        tableEmbed, file_embed = board.getTableEmbed()
         await ctx.send(file=file_embed, embed=tableEmbed)
 
 
@@ -191,7 +156,7 @@ async def t(ctx):
             "Board is not been active on this channel. Please retry after activating the game"
         )
     else:
-        tableEmbed, file_embed = showTable()
+        tableEmbed, file_embed = board.getTableEmbed()
         await ctx.send(file=file_embed, embed=tableEmbed)
 
 
@@ -222,48 +187,9 @@ async def p(ctx):
             board.setChancellor(chancellorID)
             await ctx.send(f"{args[0]} has been nominated as the chancellor")
             board.roundType = RoundType.Election
-            tableEmbed, file_embed = showTable()
+            tableEmbed, file_embed = board.getTableEmbed()
             voteMessage = await ctx.send(file=file_embed, embed=tableEmbed)
             board.messageToEdit = voteMessage
-
-
-def showTable():
-    if board.roundType == RoundType.Nomination:
-        # Remove spaces in below tags when using n bots
-        desc = f"<@! {board.president.id} >, please pick the chancellor by typing *sh!p @<candidate name>*"
-        col = "PURPLE"
-    elif board.roundType == RoundType.Nomination:
-        # Remove spaces in below tags when using n bots
-        desc = f"All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
-        col = "GREY"
-    tableEmbed = discord.Embed(
-        title=f"***\t {board.roundType} Stage***",
-        description=desc,
-        colour=colours[col],
-    )
-    file_embed = discord.File(board.gameBoard, filename="board.png")
-    """
-    Commented due to presence of bots
-    tableEmbed.set_author(
-        name=game.president.name, icon_url=game.president.avatar
-    )
-    """
-    for p in board.getPlayers():
-        if p.id == board.president.id:
-            val = "Current President"
-        elif p.id == board.chancellor.id:
-            val = "Current Chancellor"
-        elif p.id == board.prevChancellorID:
-            val = "Previous Chancellor"
-        elif p.id == board.prevPresidentID:
-            val = "Previous President"
-        elif board.roundType == RoundType.Nomination:
-            val = "Waiting for chancellor nomination"
-        elif board.roundType == RoundType.Election:
-            val = "Yet to vote"
-        tableEmbed.add_field(name=p.name, value=val)
-    tableEmbed.set_image(url="attachment://board.png")
-    return (tableEmbed, file_embed)
 
 
 def main():
