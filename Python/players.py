@@ -47,6 +47,6 @@ class Player:
     def rolePic(self, rolePic: str):
         self.__rolePic = rolePic
 
-    async def send(self, file, embed):
+    async def send(self, fileObj, embedObj):
         if self.__user:
-            await self.__user.send(file=file, embed=embed)
+            await self.__user.send(file=fileObj, embed=embedObj)
