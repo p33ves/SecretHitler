@@ -7,7 +7,7 @@ import discord
 from discord import Embed, File
 
 from players import Player
-from static_data import colours
+from static_data import colours, images
 
 # from PIL import Image
 
@@ -86,16 +86,16 @@ class Board:
         for i, p in enumerate(self.__players):
             if reqdRoles[i] == "L":
                 p.role = "Liberal"
-                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 5)}.png"
+                p.rolePic = random.choice(images["role.png"]["Liberal"])
             elif reqdRoles[i] == "F":
                 p.role = "Facist"
-                p.rolePic = f"./images/Role_{p.role}{random.randint(0, 2)}.png"
+                p.rolePic = random.choice(images["role.png"]["Facist"])
                 self.__facists[p.id] = p.name
             else:
                 p.role = "Hitler"
-                p.rolePic = f"./images/Role_{p.role}.png"
+                p.rolePic = images["role.png"]["Hitler"]
                 self.__hitler = {p.id: p.name}
-        self.__gameBoard = f"./images/Board{self.__boardType.value}.png"
+        self.__gameBoard = images["baseboard.png"][self.__boardType.name]
         await self.__sendRoles()
 
     async def __sendRoles(self):
