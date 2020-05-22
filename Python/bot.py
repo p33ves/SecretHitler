@@ -8,7 +8,6 @@ from board import Board, BoardState, RoundType
 from players import Player, Vote
 from static_data import colours, images
 
-
 bot = commands.Bot(command_prefix="sh!")
 board = Board()
 
@@ -217,7 +216,7 @@ async def v(ctx):
     else:
         args = ctx.message.content.split()[1:]
         vote = args[0]
-        if len(args > 1 or vote not in [name for name, value in vars(Vote).items()]):
+        if len(args) > 1 or vote not in [name for name, value in vars(Vote).items()]:
             await ctx.send(f"Sorry {ctx.author.name}, that seems to be an invalid entry")
         else:
             allVoted = board.setPlayerVote(ctx.author.id, Vote[vote])
