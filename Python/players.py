@@ -1,3 +1,13 @@
+from enum import Enum
+
+
+class Vote(Enum):
+    nein = 0
+    ja = 1
+
+    def __str__(self):
+        return self.name
+
 
 class Player:
     def __init__(self, id: str, name: str, avatar: str, isbot: bool, user=None):
@@ -5,9 +15,10 @@ class Player:
         self.__name = name
         self.__avatar = avatar
         self.__isbot = isbot
+        self.__user = user
         self.__role = None
         self.__rolePic = None
-        self.__user = user
+        self.__vote = None
 
     def __str__(self):
         return vars(self)
@@ -40,6 +51,14 @@ class Player:
     def rolePic(self) -> str:
         return self.__rolePic
 
+    @property
+    def vote(self) -> Vote:
+        return self.__vote
+
+    @property
+    def dmChannelID(self) -> int:
+        return self.__user.dm_channel.id
+
     @role.setter
     def role(self, role: str):
         self.__role = role
@@ -47,6 +66,10 @@ class Player:
     @rolePic.setter
     def rolePic(self, rolePic: str):
         self.__rolePic = rolePic
+
+    @vote.setter
+    def vote(self, newVote: Vote):
+        self.__vote = newVote
 
     async def send(self, fileObj, embedObj):
         if self.__user:
