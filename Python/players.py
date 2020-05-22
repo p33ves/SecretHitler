@@ -1,3 +1,4 @@
+
 class Player:
     def __init__(self, id: str, name: str, avatar: str, isbot: bool, user=None):
         self.__id = id

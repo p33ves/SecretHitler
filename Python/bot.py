@@ -1,3 +1,4 @@
+
 import json
 
 import discord
@@ -22,13 +23,12 @@ async def test(ctx):
     welcome_embed = discord.Embed(
         title="***\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
     )
-    file_embed = discord.File("./images/Thumbnail.png", filename="welcome.png")
+    file_embed = discord.File(images["welcome.png"], filename="welcome.png")
     welcome_embed.set_image(url="attachment://welcome.png")
     welcome_embed.set_footer(
         text=f"@{ctx.author.name}, your Ping is: {round(bot.latency * 1000)}ms"
     )
     await ctx.send(file=file_embed, embed=welcome_embed)
-    # await ctx.send(f"<@!{ctx.message.author.id}> Hiiiiii")
 
 
 @bot.command()
@@ -45,9 +45,9 @@ async def launch(ctx):
             description="A board has been opened. Please enter sh!join if you wish to join the game.",
             colour=colours["AQUA"],
         )
-        file_embed = discord.File("./images/Banner.jpg", filename="Banner.jpg")
+        file_embed = discord.File(images["banner.jpg"], filename="banner.jpg")
         playersEmbed.set_author(name=author.name, icon_url=author.avatar_url)
-        playersEmbed.set_image(url="attachment://Banner.jpg")
+        playersEmbed.set_image(url="attachment://banner.jpg")
         playersEmbed.set_footer(text="Player limit: 5-10")
         openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
         board.open(channel, Player.from_Discord(author), openMessage)
@@ -71,7 +71,7 @@ async def join(ctx):
         elif ctx.author.id not in [p.id for p in board.getPlayers()]:
             board.addPlayer(Player.from_Discord(ctx.author))
             newEmbed = board.messageToEdit.embeds[0].copy()
-            newEmbed.set_image(url="attachment://Banner.jpg")
+            newEmbed.set_image(url="attachment://banner.jpg")
             newEmbed.add_field(name=board.getPlayerCount(), value=ctx.author.name)
             newEmbed.set_footer(text=f"{board.getPlayerCount()}/10 players joined")
             await board.messageToEdit.edit(embed=newEmbed)

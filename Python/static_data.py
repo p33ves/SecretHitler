@@ -46,9 +46,9 @@ images = {
         ]
     },
     "baseboard.png" : {
-        "5_6" :  "./images/Board1.png",
-        "7_8" :"./images/Board2.png",
-        "9_10" :"./images/Board3.png"
+        "FiveToSix" :  "./images/Board1.png",
+        "SevenToEight" :"./images/Board2.png",
+        "NineToTen" :"./images/Board3.png"
     },
     "policy.png" : {
         "hidden" : "./images/Policy_Back.png",
