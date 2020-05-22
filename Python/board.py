@@ -166,12 +166,9 @@ class Board:
             colour=colours[col],
         )
         file_embed = discord.File(self.__gameBoard, filename="board.png")
-        """
-        Commented due to presence of bots
         tableEmbed.set_author(
-            name=game.president.name, icon_url=game.president.avatar
+            name=self.president.name, icon_url=self.president.avatar
         )
-        """
         for p in self.getPlayers():
             if self.__roundType == RoundType.Nomination:
                 if p.id == self.president.id:
