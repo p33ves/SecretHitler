@@ -1,3 +1,4 @@
+
 import random
 from enum import Enum
 from typing import Type
@@ -7,7 +8,6 @@ from discord import Embed, File
 
 from players import Player
 from static_data import colours
-
 
 # from PIL import Image
 
@@ -71,7 +71,7 @@ class Board:
     def getPlayerCount(self) -> int:
         return len(self.__players)
 
-    def generateAndSendRoles(self):
+    async def generateAndSendRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
         reqdRoles = rolesList[: len(self.__players)]
         if len(self.__players) < 7:
@@ -95,10 +95,10 @@ class Board:
                 p.role = "Hitler"
                 p.rolePic = f"./images/Role_{p.role}.png"
                 self.__hitler = {p.id: p.name}
-        self.__gameBoard = f"./images/Board{self.boardType.value}.png"
-        self.__sendRoles()
+        self.__gameBoard = f"./images/Board{self.__boardType.value}.png"
+        await self.__sendRoles()
 
-    def __sendRoles(self):
+    async def __sendRoles(self):
         for player in self.__players:
             if player.role == "Liberal":
                 desc = "For justice, liberty and equality!"
@@ -106,9 +106,7 @@ class Board:
             elif player.role == "Facist":
                 col = "ORANGE"
                 if self.__boardType == BoardType.FiveToSix:
-                    desc = (
-                        f"Hitler is ***{list(self.hitler.values())[0]}***"
-                    )
+                    desc = f"Hitler is ***{list(self.hitler.values())[0]}***"
                 elif self.__boardType == BoardType.SevenToEight:
                     desc = f"Your fellow facist is *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
                 else:
@@ -116,9 +114,7 @@ class Board:
             else:
                 col = "RED"
                 if self.__boardType == BoardType.SevenToEight:
-                    desc = (
-                        f"*{list(self.facists.values())[0]}* is the facist"
-                    )
+                    desc = f"*{list(self.facists.values())[0]}* is the facist"
                 else:
                     desc = "You don't know who the other facists are!"
             roleEmbed = Embed(
@@ -126,12 +122,10 @@ class Board:
                 colour=colours[col],
                 description=desc,
             )
-            file_embed = File(
-                f"{player.rolePic}", filename="role.png"
-            )
-            roleEmbed.set_author(name=player.name, icon_url=player.avatar_url)
+            file_embed = File(f"{player.rolePic}", filename="role.png")
+            roleEmbed.set_author(name=player.name, icon_url=player.avatar)
             roleEmbed.set_image(url="attachment://role.png")
-            player.send(file_embed, roleEmbed)
+            await player.send(file_embed, roleEmbed)
 
     def nextPresident(self, newIndex=None):
         if newIndex is None:
@@ -147,20 +141,20 @@ class Board:
                 self.__chancellor = p
 
     def getTableEmbed(self):
-        if self.roundType == RoundType.Nomination:
+        if self.__roundType == RoundType.Nomination:
             # Remove spaces in below tags when using n bots
             desc = f"<@! {self.president.id} >, please pick the chancellor by typing *sh!p @<candidate name>*"
             col = "PURPLE"
-        elif self.roundType == RoundType.Election:
+        elif self.__roundType == RoundType.Election:
             # Remove spaces in below tags when using n bots
             desc = f"All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
             col = "GREY"
         tableEmbed = discord.Embed(
-            title=f"***\t {self.roundType} Stage***",
+            title=f"***\t {self.__roundType} Stage***",
             description=desc,
             colour=colours[col],
         )
-        file_embed = discord.File(self.gameBoard, filename="board.png")
+        file_embed = discord.File(self.__gameBoard, filename="board.png")
         """
         Commented due to presence of bots
         tableEmbed.set_author(
@@ -170,20 +164,20 @@ class Board:
         for p in self.getPlayers():
             if p.id == self.president.id:
                 val = "Current President"
-            elif p.id == self.chancellor.id:
-                val = "Current Chancellor"
-            elif p.id == self.prevChancellorID:
+            elif p.id == self.__prevChancellorID:
                 val = "Previous Chancellor"
-            elif p.id == self.prevPresidentID:
+            elif p.id == self.__prevPresidentID:
                 val = "Previous President"
-            elif self.roundType == RoundType.Nomination:
+            elif self.__roundType == RoundType.Nomination:
                 val = "Waiting for chancellor nomination"
             elif self.roundType == RoundType.Election:
-                val = "Yet to vote"
+                if p.id == self.__chancellor.id:
+                    val = "Current Chancellor"
+                else:
+                    val = "Yet to vote"
             tableEmbed.add_field(name=p.name, value=val)
         tableEmbed.set_image(url="attachment://board.png")
         return tableEmbed, file_embed
-
 
     @property
     def channel(self):

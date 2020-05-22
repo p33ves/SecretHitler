@@ -5,9 +5,8 @@ from discord.ext import commands
 
 from board import Board, BoardState, RoundType
 from players import Player
+from static_data import colours, images
 
-with open("./images/colors.json", "r") as _colourFile:
-    colours = json.load(_colourFile)
 
 bot = commands.Bot(command_prefix="sh!")
 board = Board()
@@ -76,7 +75,6 @@ async def join(ctx):
             newEmbed.add_field(name=board.getPlayerCount(), value=ctx.author.name)
             newEmbed.set_footer(text=f"{board.getPlayerCount()}/10 players joined")
             await board.messageToEdit.edit(embed=newEmbed)
-            # await ctx.send(file=None, embed=newEmbed)
 
 
 @bot.command()
@@ -125,7 +123,7 @@ async def begin(ctx):
                     "So play wisely and remember, trust* ***no one.***"
                 )
                 board.state = BoardState.Active
-                board.generateAndSendRoles()
+                await board.generateAndSendRoles()
                 tableEmbed, file_embed = board.getTableEmbed()
                 await ctx.send(file=file_embed, embed=tableEmbed)
 
