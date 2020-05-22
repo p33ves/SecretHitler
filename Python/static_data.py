@@ -61,8 +61,8 @@ images = {
         "Liberal" : "./images/PartyLiberal.png"
     },
     "vote.png" : {
-        "Ja" : "./images/votJa.png",
-        "Nein" : "./images/votNein.png"
+        "Ja": "./images/voteJa.png",
+        "Nein": "./images/voteNein.png"
     },
     "logo.png" : "./images/SecretHitlerLogo.png",
     "title.png" : "./images/plainTitle.png"
