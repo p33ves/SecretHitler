@@ -6,7 +6,7 @@ from typing import Type
 import discord
 from discord import Embed, File
 
-from players import Player
+from players import Player, Vote
 from static_data import colours, images
 
 # from PIL import Image
@@ -71,6 +71,17 @@ class Board:
     def getPlayerCount(self) -> int:
         return len(self.__players)
 
+    def checkPlayerID(self, id: int) -> bool:
+        return id in [p.id for p in self.getPlayers()]
+
+    def getDMChannelIDs(self):
+        dm_channelID = dict()
+        for player in self.__players:
+            if not player.isbot:
+                dm_channelID[player.id] = player.dmChannelID
+        return dm_channelID
+
+
     async def generateAndSendRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
         reqdRoles = rolesList[: len(self.__players)]
@@ -113,7 +124,7 @@ class Board:
                     desc = f"Your fellow facists are *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
             else:
                 col = "RED"
-                if self.__boardType == BoardType.SevenToEight:
+                if self.__boardType == BoardType.FiveToSix:
                     desc = f"*{list(self.facists.values())[0]}* is the facist"
                 else:
                     desc = "You don't know who the other facists are!"
@@ -147,7 +158,7 @@ class Board:
             col = "PURPLE"
         elif self.__roundType == RoundType.Election:
             # Remove spaces in below tags when using n bots
-            desc = f"All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
+            desc = "All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
             col = "GREY"
         tableEmbed = discord.Embed(
             title=f"***\t {self.__roundType} Stage***",
@@ -162,22 +173,49 @@ class Board:
         )
         """
         for p in self.getPlayers():
-            if p.id == self.president.id:
-                val = "Current President"
-            elif p.id == self.__prevChancellorID:
-                val = "Previous Chancellor"
-            elif p.id == self.__prevPresidentID:
-                val = "Previous President"
-            elif self.__roundType == RoundType.Nomination:
-                val = "Waiting for chancellor nomination"
+            if self.__roundType == RoundType.Nomination:
+                if p.id == self.president.id:
+                    val = "Current President"
+                elif p.id == self.__prevChancellorID:
+                    val = "Previous Chancellor"
+                elif p.id == self.__prevPresidentID:
+                    val = "Previous President"
+                else:
+                    val = "Waiting for chancellor nomination"
+            elif self.__roundType == RoundType.Election:
+                if p.vote is None:
+                    val = "Yet to vote"
+                else:
+                    val = f"Voted {p.vote}"
             elif self.roundType == RoundType.Election:
                 if p.id == self.__chancellor.id:
                     val = "Current Chancellor"
                 else:
                     val = "Yet to vote"
             tableEmbed.add_field(name=p.name, value=val)
-        tableEmbed.set_image(url="attachment://board.png")
         return tableEmbed, file_embed
+
+    def setPlayerVote(self, playerID, vote : Vote) -> bool:
+        check = True
+        for player in self.__players:
+            if player.id == playerID and player.vote is None:
+                player.vote = vote
+            if not player.vote:
+                check = False
+        return check
+            
+    def clearVotes(self):
+        for player in self.__players:
+                player.vote = None
+
+    def countVotes(self) -> (bool, int, int):
+        jc, nc = 0, 0
+        for player in self.__players:
+            if player.vote == Vote.ja:
+                jc +=1
+            elif player.vote == Vote.nein:
+                nc +=1
+        return jc > nc, jc, nc
 
     @property
     def channel(self):
@@ -232,7 +270,7 @@ class Board:
         return self.__chancellor
 
     @state.setter
-    def state(self, newState: Type[BoardState]):
+    def state(self, newState: BoardState):
         # TODO define exception
         self.__state = newState
 

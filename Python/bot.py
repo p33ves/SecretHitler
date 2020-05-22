@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from board import Board, BoardState, RoundType
-from players import Player
+from players import Player, Vote
 from static_data import colours, images
 
 
@@ -68,7 +68,7 @@ async def join(ctx):
             await ctx.send(
                 f"You cannot join right now because the game is {board.state}"
             )
-        elif ctx.author.id not in [p.id for p in board.getPlayers()]:
+        elif not board.checkPlayerID(ctx.author.id):
             board.addPlayer(Player.from_Discord(ctx.author))
             newEmbed = board.messageToEdit.embeds[0].copy()
             newEmbed.set_image(url="attachment://banner.jpg")
@@ -123,8 +123,10 @@ async def begin(ctx):
                     "So play wisely and remember, trust* ***no one.***"
                 )
                 board.state = BoardState.Active
+                board.messageToEdit = None
                 await board.generateAndSendRoles()
                 tableEmbed, file_embed = board.getTableEmbed()
+                tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
                 await ctx.send(file=file_embed, embed=tableEmbed)
 
 
@@ -140,6 +142,7 @@ async def table(ctx):
         )
     else:
         tableEmbed, file_embed = board.getTableEmbed()
+        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
         await ctx.send(file=file_embed, embed=tableEmbed)
 
 
@@ -155,12 +158,13 @@ async def t(ctx):
         )
     else:
         tableEmbed, file_embed = board.getTableEmbed()
+        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
         await ctx.send(file=file_embed, embed=tableEmbed)
 
 
 @bot.command()
 async def p(ctx):
-    if board.channel.id != ctx.channel.id:
+    if board.channel.id != ctx.channel.id or ctx.channel.id not in board.getDMChannelIDs().values():
         await ctx.send(
             f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
@@ -168,26 +172,77 @@ async def p(ctx):
         await ctx.send(
             "Board is not been active on this channel. Please retry after activating the game"
         )
-    elif ctx.author.id != board.president.id:
-        await ctx.send(f"Sorry {ctx.author.name}, you are not the President!")
+    else:
+        if ctx.author.id != board.president.id:
+            await ctx.send(f"Sorry {ctx.author.name}, you are not the President!")   
+        else:
+            args = ctx.message.content.split()[1:]
+            if board.roundType == RoundType.Nomination:
+                chancellorTag = args[0]
+                if (
+                    len(args) > 1
+                    or chancellorTag[:3] != "<@!"
+                    or not board.checkPlayerID(int(chancellorTag[3:-1]))
+                    or chancellorTag[3:-1] == board.prevChancellorID
+                ):
+                    await ctx.send(f"Invalid nomination, please retry!")
+                else:
+                    chancellorID = args[0][3:-1]
+                    board.setChancellor(chancellorID)
+                    await ctx.send(f"{args[0]} has been nominated as the chancellor")
+                    board.roundType = RoundType.Election
+                    tableEmbed, file_embed = board.getTableEmbed()
+                    tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
+                    voteMessage = await ctx.send(file=file_embed, embed=tableEmbed)
+                    board.messageToEdit = voteMessage
+
+@bot.command()
+async def v(ctx):
+    if board.channel.id != ctx.channel.id or ctx.channel.id not in board.getDMChannelIDs().values():
+        await ctx.send(
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
+        )
+    elif board.state != BoardState.Active:
+        await ctx.send(
+            "Board is not been active on this channel. Please retry after activating the game"
+        )
+    elif not board.checkPlayerID(ctx.author.id):
+        await ctx.send(
+            f"Sorry {ctx.author.name}, you don't seem to have joined this game"
+        )        
+    elif board.roundType != RoundType.Election:
+        await ctx.send(
+            f"Sorry {ctx.author.name}, this isn't election phase!"
+        )
     else:
         args = ctx.message.content.split()[1:]
-        chancellorTag = args[0]
-        if (
-            len(args) > 1
-            or chancellorTag[:3] != "<@!"
-            or chancellorTag[3:-1] not in [p.id for p in board.getPlayers()]
-            or chancellorTag[3:-1] == board.prevChancellorID
-        ):
-            await ctx.send(f"Invalid nomination, please retry!")
+        vote = args[0]
+        if len(args > 1 or vote not in [name for name, value in vars(Vote).items()]):
+            await ctx.send(f"Sorry {ctx.author.name}, that seems to be an invalid entry")
         else:
-            chancellorID = args[0][3:-1]
-            board.setChancellor(chancellorID)
-            await ctx.send(f"{args[0]} has been nominated as the chancellor")
-            board.roundType = RoundType.Election
+            allVoted = board.setPlayerVote(ctx.author.id, Vote[vote])
             tableEmbed, file_embed = board.getTableEmbed()
-            voteMessage = await ctx.send(file=file_embed, embed=tableEmbed)
-            board.messageToEdit = voteMessage
+            tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
+            await board.messageToEdit.edit(embed=tableEmbed)
+            if allVoted:
+                result, jaCount, neinCount = board.countVotes()
+                if result:
+                    resultTitle = "\t Election *Passed*"
+                    col = "DARK_GOLD"
+                    img = images["vote.png"]["Ja"]
+                else:
+                    resultTitle = "\t Election *Failed*"
+                    col = "DARK_RED"
+                    img = images["vote.png"]["Nein"]
+                result_embed = discord.Embed(
+                    title=resultTitle, colour=colours[col]
+                )
+                file_embed = discord.File(img, filename="vote.png")
+                result_embed.set_image(url="attachment://vote.png")
+                result_embed.set_footer(text=f"with splits of {jaCount} - {neinCount}")
+                await ctx.send(file=file_embed, embed=result_embed)
+                board.roundType = RoundType.Legislation
+
 
 
 def main():
