@@ -3,6 +3,7 @@ import json
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Context
 
 from ballot_box import Vote
 from board import Board, BoardState, RoundType
@@ -38,7 +39,12 @@ async def reset(ctx):
 
 
 @bot.command()
-async def launch(ctx):
+async def launch(ctx: Context):
+    if not ctx.guild:
+        await ctx.send(
+            "Game can only be started sever text channel"
+        )
+        return
     if board.state != BoardState.Inactive:
         await ctx.send(
             f"A game opened by {board.owner.name} is already in {board.state} state. Please try to join that or try again later."
@@ -167,7 +173,7 @@ async def p(ctx):
                     board.messageToEdit = voteMessage
 
 @bot.command()
-async def v(ctx):
+async def v(ctx: Context):
     if not await validSource(ctx):
         return
     elif not await activeBoard(ctx):
@@ -206,7 +212,7 @@ async def v(ctx):
                 file_embed = discord.File(img, filename="vote.png")
                 result_embed.set_image(url="attachment://vote.png")
                 result_embed.set_footer(text=f"with splits of {jaCount} - {neinCount}")
-                await ctx.send(file=file_embed, embed=result_embed)
+                await board.channel.send(file=file_embed, embed=result_embed)
                 board.roundType = RoundType.Legislation
 
 
