@@ -26,12 +26,13 @@ class Setup:
         self.__fascistPolicies = 0
         self.__base = images["baseboard.png"][self.__setupType.name]
 
-    def sendImage(self) -> Image:
+    def sendImage(self) -> str:
         baseImg = Image.open(self.__base)
         dot = Image.open(images["dot.png"])
         new = baseImg.copy()
         new.paste(dot, coordinates["failedElection"][self.failedElection] , dot)
-        return new
+        new.save(images["currentboard.png"],"PNG")
+        return images["currentboard.png"]
 
     def placePolicy(self, card: Policy):
         baseImg = Image.open(self.__base)
@@ -44,7 +45,8 @@ class Setup:
             cardImg = Image.open(card.getImageUrl())
             new.paste(cardImg, coordinates[card.name][self.__liberalPolicies])
             self.__liberalPolicies += 1
-        self.__base = new
+        new.save(images["newbase.png"],"PNG")
+        self.__base = images["newbase.png"]
         
     @property
     def setupType(self):
@@ -63,7 +65,7 @@ class Setup:
         return self.__fascistPolicies
 
     @property
-    def gameBoard(self) -> Image:
+    def gameBoard(self) -> str:
         return self.sendImage()
 
 

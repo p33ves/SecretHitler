@@ -1,6 +1,7 @@
 auth.json
 JavaScript/node_modules/**
 images/origin/**
+images/intermediates/**
 .vscode/**
 /node_modules/
 /Python/.idea/

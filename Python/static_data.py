@@ -66,7 +66,9 @@ images = {
     },
     "logo.png" : "./images/SecretHitlerLogo.png",
     "title.png" : "./images/plainTitle.png",
-    "dot.png" : "./images/dot.png"
+    "dot.png" : "./images/dot.png", 
+    "currentboard.png" : "./images/intermediaries/currentboard.png",
+    "newbase.png" : "./images/intermediaries/newbase.png"
 }
 
 coordinates = {
