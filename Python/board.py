@@ -83,15 +83,15 @@ class Board:
         self.__setup = Setup(self.getPlayerCount())
         random.shuffle(self.__players)
         random.shuffle(reqdRoles)
-        self.__facists = dict()
+        self.__fascists = dict()
         for i, p in enumerate(self.__players):
             if reqdRoles[i] == "L":
                 p.role = "Liberal"
                 p.rolePic = random.choice(images["role.png"]["Liberal"])
             elif reqdRoles[i] == "F":
-                p.role = "Facist"
-                p.rolePic = random.choice(images["role.png"]["Facist"])
-                self.__facists[p.id] = p.name
+                p.role = "Fascist"
+                p.rolePic = random.choice(images["role.png"]["Fascist"])
+                self.__fascists[p.id] = p.name
             else:
                 p.role = "Hitler"
                 p.rolePic = images["role.png"]["Hitler"]
@@ -103,20 +103,20 @@ class Board:
             if player.role == "Liberal":
                 desc = "For justice, liberty and equality!"
                 col = "BLUE"
-            elif player.role == "Facist":
+            elif player.role == "Fascist":
                 col = "ORANGE"
                 if self.setup.setupType == SetupType.FiveToSix:
                     desc = f"Hitler is ***{list(self.hitler.values())[0]}***"
                 elif self.setup.setupType == SetupType.SevenToEight:
-                    desc = f"Your fellow facist is *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
+                    desc = f"Your fellow fascist is *{[val for key, val in self.fascists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
                 else:
-                    desc = f"Your fellow facists are *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
+                    desc = f"Your fellow fascists are *{[val for key, val in self.fascists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
             else:
                 col = "RED"
                 if self.setup.setupType == SetupType.FiveToSix:
-                    desc = f"*{list(self.facists.values())[0]}* is the facist"
+                    desc = f"*{list(self.fascists.values())[0]}* is the fascist"
                 else:
-                    desc = "You don't know who the other facists are!"
+                    desc = "You don't know who the other fascists are!"
             roleEmbed = Embed(
                 title=f"You are the ***{player.role}***",
                 colour=colours[col],
@@ -218,8 +218,8 @@ class Board:
         return self.__setup
 
     @property
-    def facists(self):
-        return self.__facists
+    def fascists(self):
+        return self.__fascists
 
     @property
     def hitler(self):

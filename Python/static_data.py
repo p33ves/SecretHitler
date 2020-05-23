@@ -30,10 +30,10 @@ images = {
     "welcome.png" : "./images/Thumbnail.png",
     "banner.jpg" : "./images/Banner.jpg",
     "role.png" : {
-        "Facist" : [
-            "./images/Role_Facist0.png",
-            "./images/Role_Facist1.png",
-            "./images/Role_Facist2.png"
+        "Fascist" : [
+            "./images/Role_Fascist0.png",
+            "./images/Role_Fascist1.png",
+            "./images/Role_Fascist2.png"
         ],
         "Hitler" : "./images/Role_Hitler.png",
         "Liberal" : [
@@ -52,12 +52,12 @@ images = {
     },
     "policy.png" : {
         "hidden" : "./images/Policy_Back.png",
-        "Facist" : "./images/Policy_Facist.png",
+        "Fascist" : "./images/Policy_Fascist.png",
         "Liberal" : "./images/Policy_Liberal.png"
     },
     "party.png" : {
         "hidden" : "./images/PartyMembership.png",
-        "Facist" : "./images/PartyFacist.png",
+        "Fascist" : "./images/PartyFascist.png",
         "Liberal" : "./images/PartyLiberal.png"
     },
     "vote.png" : {
@@ -83,7 +83,7 @@ coordinates = {
         (654, 90),
         (820, 90)
     ],
-    "Facist" : [
+    "Fascist" : [
         (96, 456),
         (255, 456),
         (412, 456),

@@ -23,7 +23,7 @@ class Setup:
             self.__setupType = SetupType.NineToTen
         self.__failedElection = 0
         self.__liberalPolicies = 0
-        self.__facistPolicies = 0
+        self.__fascistPolicies = 0
         self.__base = images["baseboard.png"][self.__setupType.name]
 
     def sendImage(self) -> Image:
@@ -35,12 +35,13 @@ class Setup:
 
     def placePolicy(self, card: Policy):
         baseImg = Image.open(self.__base)
-        cardImg = Image.open(card.getImageUrl())
         new = baseImg.copy()
-        if card.name == "Facist":
-            new.paste(cardImg, coordinates[card.name][self.__facistPolicies])
-            self.__facistPolicies += 1           
-        elif card.name == "Liberal":
+        if card == Policy.Fascist:
+            cardImg = Image.open(card.getImageUrl())
+            new.paste(cardImg, coordinates[card.name][self.__fascistPolicies])
+            self.__fascistPolicies += 1           
+        elif card == Policy.Liberal:
+            cardImg = Image.open(card.getImageUrl())
             new.paste(cardImg, coordinates[card.name][self.__liberalPolicies])
             self.__liberalPolicies += 1
         self.__base = new
@@ -58,8 +59,8 @@ class Setup:
         return self.__liberalPolicies
 
     @property
-    def facistPolicies(self):
-        return self.__facistPolicies
+    def fascistPolicies(self):
+        return self.__fascistPolicies
 
     @property
     def gameBoard(self) -> Image:
