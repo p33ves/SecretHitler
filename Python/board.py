@@ -118,7 +118,7 @@ class Board:
                 else:
                     desc = "You don't know who the other fascists are!"
             roleEmbed = Embed(
-                title=f"You are the ***{player.role}***",
+                title=f"You are ***{player.role}***",
                 colour=colours[col],
                 description=desc,
             )
@@ -142,11 +142,9 @@ class Board:
 
     def getTableEmbed(self):
         if self.__roundType == RoundType.Nomination:
-            # Remove spaces in below tags when using n bots
-            desc = f"<@! {self.president.id} >, please pick the chancellor by typing *sh!p @<candidate name>*"
+            desc = f"<@!{self.president.id}>, please pick the chancellor by typing *sh!p @<candidate name>*"
             col = "PURPLE"
         elif self.__roundType == RoundType.Election:
-            # Remove spaces in below tags when using n bots
             desc = "All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
             col = "GREY"
         tableEmbed = discord.Embed(
@@ -192,7 +190,7 @@ class Board:
         return len(self.__players) == self.__ballotBox.getTotalVoteCount()
 
     def getVoteSplit(self) -> (int, int):
-        self.__ballotBox.getVoteSplit()
+        return self.__ballotBox.getVoteSplit()
 
     def electionResult(self) -> Vote:
         return self.__ballotBox.result()
