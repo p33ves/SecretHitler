@@ -1,6 +1,6 @@
 import random
 from enum import Enum
-from typing import Type, List
+from typing import List
 
 from static_data import images
 
@@ -15,6 +15,25 @@ class Policy(Enum):
             2: images["policy.png"]["Liberal"],
         }
         return imageUrls[self.value]
+
+    def __repr__(self):
+        return self.name
+
+    @staticmethod
+    def getEnum(policy: str):
+        policy = policy.lower()
+        if (policy == "fascist" or
+                policy == "red" or
+                policy == "r"):
+            return Policy.Fascist
+        elif (policy == "liberal" or
+              policy == "blue" or
+              policy == "b"):
+            return Policy.Liberal
+        else:
+            return None
+
+
 
 
 class PolicyPile:
@@ -52,14 +71,14 @@ class PolicyPile:
     def peekCardsInPlay(self) -> List[Policy]:
         return self.__cardsInPlay.copy()
 
-    def discardPolicy(self, policy: Type[Policy]):
+    def discardPolicy(self, policy: Policy):
         # TODO: define exception
         if self.__cardsInPlay.count(policy) == 0 or len(self.__cardsInPlay) != 3:
             raise Exception
         self.__cardsInPlay.remove(policy)
         self.__discardPile.append(policy)
 
-    def acceptPolicy(self, policy: Type[Policy]):
+    def acceptPolicy(self, policy: Policy):
         # TODO: define exception
         if self.__cardsInPlay.count(policy) != 2 or len(self.__cardsInPlay) != 2:
             raise Exception
@@ -69,3 +88,7 @@ class PolicyPile:
 
     def peekTop3(self):  # returns the top three cards on the deck
         return self.__drawPile[0:3]
+
+    @property
+    def noOfCardsInDeck(self) -> int:
+        return len(self.__drawPile)

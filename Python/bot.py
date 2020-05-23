@@ -8,6 +8,7 @@ from discord.ext.commands import Context
 from ballot_box import Vote
 from board import Board, BoardState, RoundType
 from players import Player
+from policypile import Policy
 from static_data import colours, images
 
 bot = commands.Bot(command_prefix="sh!")
@@ -52,7 +53,7 @@ async def launch(ctx: Context):
         )
     else:
         author = ctx.author
-        channel = ctx.channel
+        channel = ctx.channel.send
         playersEmbed = discord.Embed(
             title="**\t Player List **",
             description="A board has been opened. Please enter *sh!join* if you wish to join the game.",
@@ -123,27 +124,39 @@ async def p(ctx: Context):
     elif not await activeBoard(ctx.channel):
         return
     else:
-        if ctx.author.id != board.president.id:
-            await ctx.send(f"Sorry {ctx.author.name}, you are not the President!")   
-        else:
-            args = ctx.message.content.split()[1:]
-            if board.roundType == RoundType.Nomination:
-                chancellorTag = args[0]
-                if (
-                    len(args) > 1
-                    or chancellorTag[:3] != "<@!"
-                    or not board.checkPlayerID(int(chancellorTag[3:-1]))
-                    or chancellorTag[3:-1] == board.prevChancellorID
-                    or chancellorTag[3:-1] == board.president.id
-                ):
-                    await ctx.send(f"Invalid nomination, please retry!")
-                else:
-                    chancellorID = args[0][3:-1]
-                    board.setChancellor(chancellorID)
-                    await board.channel.send(f"{args[0]} has been nominated as the chancellor")
-                    board.roundType = RoundType.Election
-                    voteMessage = await showBoard(board.channel)
-                    board.messageToEdit = voteMessage
+        args = ctx.message.content.split()[1:]
+        if board.roundType == RoundType.Nomination:
+            if ctx.author.id != board.president.id:
+                await ctx.send(f"Sorry {ctx.author.name}, you are not the President!")
+            else:
+                args = ctx.message.content.split()[1:]
+                if board.roundType == RoundType.Nomination:
+                    chancellorTag = args[0]
+                    if (
+                            len(args) > 1
+                            or chancellorTag[:3] != "<@!"
+                            or not board.checkPlayerID(int(chancellorTag[3:-1]))
+                            or chancellorTag[3:-1] == board.prevChancellorID
+                            or chancellorTag[3:-1] == board.president.id
+                    ):
+                        await ctx.send(f"Invalid nomination, please retry!")
+                    else:
+                        chancellorID = args[0][3:-1]
+                        board.setChancellor(chancellorID)
+                        await board.channel.send(f"{args[0]} has been nominated as the chancellor")
+                        board.roundType = RoundType.Election
+                        voteMessage = await showBoard(board.channel)
+                        board.messageToEdit = voteMessage
+        elif board.roundType == RoundType.Legislation_Pres or board.roundType == RoundType.Legislation_Chanc:
+            if args > 1:
+                policy = None
+            else:
+                policy = Policy.getEnum(args)
+            if board.roundType == RoundType.Legislation_Pres:
+                board.setPresidentDiscard(policy)
+            else:
+                board.setChancellorPick(policy)
+
 
 @bot.command()
 async def v(ctx: Context):
@@ -175,7 +188,7 @@ async def v(ctx: Context):
                     resultTitle = "\t Election *Passed*"
                     col = "DARK_GOLD"
                     img = images["vote.png"]["Ja"]
-                    board.roundType = RoundType.Legislation
+                    board.startLegislation()
                 else:
                     resultTitle = "\t Election *Failed*"
                     col = "DARK_RED"
@@ -191,8 +204,6 @@ async def v(ctx: Context):
                 if board.roundType == RoundType.Nomination:
                     board.nextPresident()
                     await showBoard(ctx.channel)
-
-                
 
 
 async def inChannel(ch) -> bool:

@@ -7,6 +7,7 @@ from discord import Embed, File
 
 from ballot_box import BallotBox, Vote
 from players import Player
+from policypile import Policy, PolicyPile
 from setup import Setup, SetupType
 from static_data import colours, images
 
@@ -26,8 +27,9 @@ class BoardState(Enum):
 class RoundType(Enum):
     Nomination = 0
     Election = 1
-    Legislation = 2
-    Execution = 3
+    Legislation_Pres = 2
+    Legislation_Chanc = 3
+    Execution = 4
 
     def __str__(self):
         return self.name
@@ -46,6 +48,7 @@ class Board:
         self.__prevChancellorID = None
         self.__roundType = RoundType.Nomination
         self.__ballotBox = BallotBox()
+        self.__policyPile = PolicyPile()
 
     def open(self, channel, boardOwner, messageToEdit):
         self.__channel = channel
@@ -198,6 +201,52 @@ class Board:
             self.setup.failedElection += 1
         return self.__ballotBox.result()
 
+    def startLegislation(self):
+        self.__roundType = RoundType.Legislation_Pres
+        shuffled = self.__policyPile.draw()
+        cardsInPlay = self.__policyPile.peekCardsInPlay()
+        if shuffled:
+            self.channel.send("The deck has been reshuffled and there are {}".format(self.__policyPile.noOfCardsInDeck))
+            pass
+        # TODO get image
+        cardsEmbed = Embed(
+            title=f"***\t Discard one Policy***",
+            description="Type Fascist or Liberal to discard from the given choices \n The cards are {}".format(
+                cardsInPlay),
+            colour=colours["GREY"]
+        )
+        self.president.send(None, cardsEmbed)
+
+    def setPresidentDiscard(self, policy: Policy):
+        cardsInPlay = self.__policyPile.peekCardsInPlay()
+        if not policy in cardsInPlay:
+            cardsEmbed = Embed(
+                title=f"***\t Discard one Policy***",
+                description="Incorrect choice try again. \n The cards are {}".format(
+                    cardsInPlay),
+                colour=colours["GREY"]
+            )
+            self.president.send(None, cardsEmbed)
+            pass
+        else:
+            self.__policyPile.discardPolicy(policy)
+            self.roundType = RoundType.Legislation_Chanc
+            # tell chanc to pick policy:
+
+    def setChancellorPick(self, policy: Policy):
+        cardsInPlay = self.__policyPile.peekCardsInPlay()
+        if not policy in cardsInPlay:
+            # tell chanc to pick again
+            pass
+        else:
+            self.__policyPile.acceptPolicy(policy)
+            self.__executePolicy(policy)
+
+    def __executePolicy(self, policy: Policy):
+        # put policy in state deck
+        # do action for policy
+        pass
+
     @property
     def channel(self):
         return self.__channel
@@ -227,7 +276,7 @@ class Board:
         return self.__hitler
 
     @property
-    def president(self):
+    def president(self) -> Player:
         return self.__players[self.__presidentIndex]
 
     @property

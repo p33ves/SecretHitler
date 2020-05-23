@@ -1,3 +1,31 @@
+from enum import Enum
+
+
+class Role(Enum):
+    Hitler = 1
+    Fascist = 2
+    Liberal = 3
+
+    def getRolePic(self):
+        rolePics = {
+            1: "",
+            2: "",
+            3: ""
+        }
+        return rolePics[self.value]
+
+    def getPartyPic(self):
+        if self == Role.Liberal:
+            return ""
+        else:
+            return ""
+
+    def getParty(self):
+        if self == Role.Liberal:
+            return self
+        else:
+            return Role.Fascist
+
 class Player:
     def __init__(self, user):
         self.__user = user
