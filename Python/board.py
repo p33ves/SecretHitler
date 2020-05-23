@@ -132,8 +132,9 @@ class Board:
             newIndex = self.__presidentIndex + 1
         self.__prevPresidentID = self.president.id
         self.__presidentIndex = newIndex
-        self.__prevChancellorID = self.__chancellor.id
-        self.__chancellor = None
+        if self.__chancellor:
+            self.__prevChancellorID = self.__chancellor.id
+            self.__chancellor = None
 
     def setChancellor(self, chancellorID):
         for p in self.__players:
@@ -193,6 +194,8 @@ class Board:
         return self.__ballotBox.getVoteSplit()
 
     def electionResult(self) -> Vote:
+        if self.__ballotBox.result() == Vote.nein:
+            self.setup.failedElection += 1
         return self.__ballotBox.result()
 
     @property

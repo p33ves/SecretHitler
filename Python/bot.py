@@ -202,10 +202,12 @@ async def v(ctx: Context):
                     resultTitle = "\t Election *Passed*"
                     col = "DARK_GOLD"
                     img = images["vote.png"]["Ja"]
+                    board.roundType = RoundType.Legislation
                 else:
                     resultTitle = "\t Election *Failed*"
                     col = "DARK_RED"
                     img = images["vote.png"]["Nein"]
+                    board.roundType = RoundType.Nomination
                 result_embed = discord.Embed(
                     title=resultTitle, colour=colours[col]
                 )
@@ -213,7 +215,13 @@ async def v(ctx: Context):
                 result_embed.set_image(url="attachment://vote.png")
                 result_embed.set_footer(text=f"with splits of {jaCount} - {neinCount}")
                 await board.channel.send(file=file_embed, embed=result_embed)
-                board.roundType = RoundType.Legislation
+                if board.roundType == RoundType.Nomination:
+                    board.nextPresident()
+                    tableEmbed, file_embed = board.getTableEmbed()
+                    tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
+                    await board.channel.send(file=file_embed, embed=tableEmbed)
+
+                
 
 
 async def inChannel(ctx) -> bool:
