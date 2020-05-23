@@ -10,7 +10,7 @@ Game:
         boardType
         failedElectionCount
         liberalPoliciesPassed
-        facistPoliciesPassed
+        fascistPoliciesPassed
         enactPresidentialPower() -- enact Presidential Powers based on boardType
     Policies:
         drawPile[]

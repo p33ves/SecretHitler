@@ -11,10 +11,10 @@ class Policy(Enum):
 
     def getImageUrl(self) -> str:
         imageUrls = {
-            1: images["policy.png"]["Facist"],
+            1: images["policy.png"]["Fascist"],
             2: images["policy.png"]["Liberal"],
         }
-        return imageUrls.get(self.value)
+        return imageUrls[self.value]
 
 
 class PolicyPile:
