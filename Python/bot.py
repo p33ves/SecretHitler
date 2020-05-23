@@ -4,8 +4,9 @@ import json
 import discord
 from discord.ext import commands
 
+from ballot_box import Vote
 from board import Board, BoardState, RoundType
-from players import Player, Vote
+from players import Player
 from static_data import colours, images
 
 bot = commands.Bot(command_prefix="sh!")
@@ -183,13 +184,15 @@ async def v(ctx):
         if len(args) > 1 or vote not in [name for name, value in vars(Vote).items()]:
             await ctx.send(f"Sorry {ctx.author.name}, that seems to be an invalid entry")
         else:
-            allVoted = board.setPlayerVote(ctx.author.id, Vote[vote])
+            board.vote(ctx.author.id, Vote[vote])
+            votingComplete = board.votingComplete()
             tableEmbed, file_embed = board.getTableEmbed()
             tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
             await board.messageToEdit.edit(embed=tableEmbed)
-            if allVoted:
-                result, jaCount, neinCount = board.countVotes()
-                if result:
+            if votingComplete:
+                jaCount, neinCount = board.getVoteSplit()
+                result = board.electionResult()
+                if result == Vote.ja:
                     resultTitle = "\t Election *Passed*"
                     col = "DARK_GOLD"
                     img = images["vote.png"]["Ja"]
