@@ -49,7 +49,7 @@ async def launch(ctx):
         playersEmbed.set_image(url="attachment://banner.jpg")
         playersEmbed.set_footer(text="Player limit: 5-10")
         openMessage = await ctx.send(file=file_embed, embed=playersEmbed)
-        board.open(channel, Player.from_Discord(author), openMessage)
+        board.open(channel, Player(author), openMessage)
 
 
 @bot.command()
@@ -68,7 +68,7 @@ async def join(ctx):
                 f"You cannot join right now because the game is {board.state}"
             )
         elif not board.checkPlayerID(ctx.author.id):
-            board.addPlayer(Player.from_Discord(ctx.author))
+            board.addPlayer(Player(ctx.author))
             newEmbed = board.messageToEdit.embeds[0].copy()
             newEmbed.set_image(url="attachment://banner.jpg")
             newEmbed.add_field(name=board.getPlayerCount(), value=ctx.author.name)
@@ -82,51 +82,30 @@ async def begin(ctx):
         await ctx.send(
             f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
+    elif board.state == BoardState.Inactive:
+        await ctx.send(
+            "Board has not been opened yet. Please enter sh!open to a game first."
+        )
+    elif board.state != BoardState.Open:
+        await ctx.send(
+            f"You cannot begin right now because the game is {board.state}"
+        )
+    elif not board.hasEnoughPlayers():
+            await ctx.send("Sorry, the game requires player count to be 5-10")
     else:
-        if board.state == BoardState.Inactive:
-            await ctx.send(
-                "Board has not been opened yet. Please enter sh!open to a game first."
-            )
-        elif board.state != BoardState.Open:
-            await ctx.send(
-                f"You cannot begin right now because the game is {board.state}"
-            )
-        else:
-            args = ctx.message.content.split()[1:]
-            errorFlag = False
-            if len(args):
-                noOfBots = 0
-                if args[0] == "-autobot":
-                    try:
-                        if int(args[1]) > 0:
-                            noOfBots = int(args[1])
-                    except IndexError:
-                        errorFlag = True
-                else:
-                    errorFlag = True
-                if errorFlag:
-                    await ctx.send("Invalid argument!")
-                else:
-                    for i in range(noOfBots):
-                        board.addPlayer(
-                            Player(str(11110000 + i), f"Bot{i}", "", True, None)
-                        )
-            if not board.hasEnoughPlayers():
-                await ctx.send("Sorry, the game requires player count to be 5-10")
-            else:
-                await ctx.send(
-                    "*The year is 1932. The place is pre-WWII Germany. "
-                    "In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. "
-                    "Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler. "
-                    "Your roles will be sent to you as a Private Message. The future of the world depends on you."
-                    "So play wisely and remember, trust* ***no one.***"
-                )
-                board.state = BoardState.Active
-                board.messageToEdit = None
-                await board.generateAndSendRoles()
-                tableEmbed, file_embed = board.getTableEmbed()
-                tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-                await ctx.send(file=file_embed, embed=tableEmbed)
+        await ctx.send(
+            "*The year is 1932. The place is pre-WWII Germany. "
+            "In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. "
+            "Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler. "
+            "Your roles will be sent to you as a Private Message. The future of the world depends on you."
+            "So play wisely and remember, trust* ***no one.***"
+        )
+        board.state = BoardState.Active
+        board.messageToEdit = None
+        await board.generateAndSendRoles()
+        tableEmbed, file_embed = board.getTableEmbed()
+        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
+        await ctx.send(file=file_embed, embed=tableEmbed)
 
 
 @bot.command()
@@ -183,6 +162,7 @@ async def p(ctx):
                     or chancellorTag[:3] != "<@!"
                     or not board.checkPlayerID(int(chancellorTag[3:-1]))
                     or chancellorTag[3:-1] == board.prevChancellorID
+                    or chancellorTag[3:-1] == board.president.id
                 ):
                     await ctx.send(f"Invalid nomination, please retry!")
                 else:
