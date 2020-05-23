@@ -20,7 +20,7 @@ async def on_ready():
 
 
 @bot.command()
-async def test(ctx):
+async def test(ctx: Context):
     welcome_embed = discord.Embed(
         title="***\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
     )
@@ -36,6 +36,7 @@ async def test(ctx):
 async def reset(ctx):
     global board
     board = Board()
+    await ctx.send(f"Game has been reset on #{ctx.channel.name}")
 
 
 @bot.command()
@@ -54,7 +55,7 @@ async def launch(ctx: Context):
         channel = ctx.channel
         playersEmbed = discord.Embed(
             title="**\t Player List **",
-            description="A board has been opened. Please enter sh!join if you wish to join the game.",
+            description="A board has been opened. Please enter *sh!join* if you wish to join the game.",
             colour=colours["AQUA"],
         )
         file_embed = discord.File(images["banner.jpg"], filename="banner.jpg")
@@ -66,8 +67,8 @@ async def launch(ctx: Context):
 
 
 @bot.command()
-async def join(ctx):
-    if not await inChannel(ctx):
+async def join(ctx: Context):
+    if not await inChannel(ctx.channel):
         return
     else:
         if board.state == BoardState.Inactive:
@@ -88,8 +89,8 @@ async def join(ctx):
 
 
 @bot.command()
-async def begin(ctx):
-    if not await inChannel(ctx):
+async def begin(ctx: Context):
+    if not await inChannel(ctx.channel):
         return
     elif board.state == BoardState.Inactive:
         await ctx.send(
@@ -112,40 +113,14 @@ async def begin(ctx):
         board.state = BoardState.Active
         board.messageToEdit = None
         await board.generateAndSendRoles()
-        tableEmbed, file_embed = board.getTableEmbed()
-        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-        await ctx.send(file=file_embed, embed=tableEmbed)
+        await showBoard(ctx.channel)
 
 
 @bot.command()
-async def table(ctx):
-    if not await inChannel(ctx):
+async def p(ctx: Context):
+    if not await validSource(ctx.channel):
         return
-    elif not await activeBoard(ctx):
-        return
-    else:
-        tableEmbed, file_embed = board.getTableEmbed()
-        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-        await ctx.send(file=file_embed, embed=tableEmbed)
-
-
-@bot.command()
-async def t(ctx):
-    if not await inChannel(ctx):
-        return
-    elif not await activeBoard(ctx):
-        return
-    else:
-        tableEmbed, file_embed = board.getTableEmbed()
-        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-        await ctx.send(file=file_embed, embed=tableEmbed)
-
-
-@bot.command()
-async def p(ctx):
-    if not await validSource(ctx):
-        return
-    elif not await activeBoard(ctx):
+    elif not await activeBoard(ctx.channel):
         return
     else:
         if ctx.author.id != board.president.id:
@@ -165,18 +140,16 @@ async def p(ctx):
                 else:
                     chancellorID = args[0][3:-1]
                     board.setChancellor(chancellorID)
-                    await ctx.send(f"{args[0]} has been nominated as the chancellor")
+                    await board.channel.send(f"{args[0]} has been nominated as the chancellor")
                     board.roundType = RoundType.Election
-                    tableEmbed, file_embed = board.getTableEmbed()
-                    tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-                    voteMessage = await ctx.send(file=file_embed, embed=tableEmbed)
+                    voteMessage = await showBoard(board.channel)
                     board.messageToEdit = voteMessage
 
 @bot.command()
 async def v(ctx: Context):
-    if not await validSource(ctx):
+    if not await validSource(ctx.channel):
         return
-    elif not await activeBoard(ctx):
+    elif not await activeBoard(ctx.channel):
         return
     elif not await playerInGame(ctx):
         return
@@ -217,34 +190,32 @@ async def v(ctx: Context):
                 await board.channel.send(file=file_embed, embed=result_embed)
                 if board.roundType == RoundType.Nomination:
                     board.nextPresident()
-                    tableEmbed, file_embed = board.getTableEmbed()
-                    tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-                    await board.channel.send(file=file_embed, embed=tableEmbed)
+                    await showBoard(ctx.channel)
 
                 
 
 
-async def inChannel(ctx) -> bool:
-    if board.channel.id != ctx.channel.id:
-        await ctx.send(
+async def inChannel(ch) -> bool:
+    if board.channel.id != ch.id:
+        await ch.send(
             f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
         return False
     return True
 
 
-async def validSource(ctx) -> bool:
-    if board.channel.id != ctx.channel.id and ctx.channel.id not in board.getDMChannelIDs().values():
-        await ctx.send(
+async def validSource(ch) -> bool:
+    if board.channel.id != ch.id and ch.id not in board.getDMChannelIDs().values():
+        await ch.send(
             f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
         )
         return False
     return True
 
 
-async def activeBoard(ctx) -> bool:
+async def activeBoard(ch) -> bool:
     if board.state != BoardState.Active:
-        await ctx.send(
+        await ch.send(
             "Board is not been active on this channel. Please retry after activating the game"
         )
         return False
@@ -258,6 +229,17 @@ async def playerInGame(ctx) -> bool:
         )
         return False
     return True
+
+
+async def showBoard(channel):
+    if not await inChannel(channel):
+        return
+    elif not await activeBoard(channel):
+        return
+    else:
+        tableEmbed, file_embed = board.getTableEmbed()
+        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
+        return await channel.send(file=file_embed, embed=tableEmbed)
 
 def main():
     with open("./auth.json", "r") as _authFile:
