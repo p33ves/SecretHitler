@@ -31,6 +31,12 @@ async def test(ctx):
 
 
 @bot.command()
+async def reset(ctx):
+    global board
+    board = Board()
+
+
+@bot.command()
 async def launch(ctx):
     if board.state != BoardState.Inactive:
         await ctx.send(
@@ -54,10 +60,8 @@ async def launch(ctx):
 
 @bot.command()
 async def join(ctx):
-    if board.channel.id != ctx.channel.id:
-        await ctx.send(
-            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
-        )
+    if not inChannel(ctx):
+        return
     else:
         if board.state == BoardState.Inactive:
             await ctx.send(
@@ -78,10 +82,8 @@ async def join(ctx):
 
 @bot.command()
 async def begin(ctx):
-    if board.channel.id != ctx.channel.id:
-        await ctx.send(
-            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
-        )
+    if not inChannel(ctx):
+        return
     elif board.state == BoardState.Inactive:
         await ctx.send(
             "Board has not been opened yet. Please enter sh!open to a game first."
@@ -110,14 +112,10 @@ async def begin(ctx):
 
 @bot.command()
 async def table(ctx):
-    if board.channel.id != ctx.channel.id:
-        await ctx.send(
-            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
-        )
-    elif board.state != BoardState.Active:
-        await ctx.send(
-            "Board is not been active on this channel. Please retry after activating the game"
-        )
+    if not inChannel(ctx):
+        return
+    elif not activeBoard(ctx):
+        return
     else:
         tableEmbed, file_embed = board.getTableEmbed()
         tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
@@ -126,14 +124,10 @@ async def table(ctx):
 
 @bot.command()
 async def t(ctx):
-    if board.channel.id != ctx.channel.id:
-        await ctx.send(
-            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
-        )
-    elif board.state != BoardState.Active:
-        await ctx.send(
-            "Board is not been active on this channel. Please retry after activating the game"
-        )
+    if not inChannel(ctx):
+        return
+    elif not activeBoard(ctx):
+        return
     else:
         tableEmbed, file_embed = board.getTableEmbed()
         tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
@@ -142,14 +136,10 @@ async def t(ctx):
 
 @bot.command()
 async def p(ctx):
-    if board.channel.id != ctx.channel.id or ctx.channel.id not in board.getDMChannelIDs().values():
-        await ctx.send(
-            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
-        )
-    elif board.state != BoardState.Active:
-        await ctx.send(
-            "Board is not been active on this channel. Please retry after activating the game"
-        )
+    if not validSource(ctx):
+        return
+    elif not activeBoard(ctx):
+        return
     else:
         if ctx.author.id != board.president.id:
             await ctx.send(f"Sorry {ctx.author.name}, you are not the President!")   
@@ -177,18 +167,12 @@ async def p(ctx):
 
 @bot.command()
 async def v(ctx):
-    if board.channel.id != ctx.channel.id or ctx.channel.id not in board.getDMChannelIDs().values():
-        await ctx.send(
-            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
-        )
-    elif board.state != BoardState.Active:
-        await ctx.send(
-            "Board is not been active on this channel. Please retry after activating the game"
-        )
-    elif not board.checkPlayerID(ctx.author.id):
-        await ctx.send(
-            f"Sorry {ctx.author.name}, you don't seem to have joined this game"
-        )        
+    if not validSource(ctx):
+        return
+    elif not activeBoard(ctx):
+        return
+    elif not playerInGame(ctx):
+        return
     elif board.roundType != RoundType.Election:
         await ctx.send(
             f"Sorry {ctx.author.name}, this isn't election phase!"
@@ -223,6 +207,40 @@ async def v(ctx):
                 board.roundType = RoundType.Legislation
 
 
+async def inChannel(ctx) -> bool:
+    if board.channel.id != ctx.channel.id:
+        await ctx.send(
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
+        )
+        return False
+    return True
+
+
+async def validSource(ctx) -> bool:
+    if board.channel.id != ctx.channel.id and ctx.channel.id not in board.getDMChannelIDs().values():
+        await ctx.send(
+            f"Board has not been opened on this channel. Please ask {board.owner.name} for directions"
+        )
+        return False
+    return True
+
+
+async def activeBoard(ctx) -> bool:
+    if board.state != BoardState.Active:
+        await ctx.send(
+            "Board is not been active on this channel. Please retry after activating the game"
+        )
+        return False
+    return True
+
+
+async def playerInGame(ctx) -> bool:
+    if not board.checkPlayerID(ctx.author.id):
+        await ctx.send(
+            f"Sorry {ctx.author.name}, you don't seem to have joined this game"
+        )
+        return False
+    return True
 
 def main():
     with open("./auth.json", "r") as _authFile:
