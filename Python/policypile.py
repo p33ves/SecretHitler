@@ -2,13 +2,18 @@ import random
 from enum import Enum
 from typing import Type, List
 
+from static_data import images
+
 
 class Policy(Enum):
-    fascist = 1
-    liberal = 2
+    Fascist = 1
+    Liberal = 2
 
     def getImageUrl(self) -> str:
-        imageUrls = {1: "", 2: ""}
+        imageUrls = {
+            1: images["policy.png"]["Facist"],
+            2: images["policy.png"]["Liberal"],
+        }
         return imageUrls.get(self.value)
 
 
@@ -22,9 +27,9 @@ class PolicyPile:
 
     def __initDrawPile(self):
         for _ in range(1, 12):
-            self.__drawPile.append(Policy.fascist)
+            self.__drawPile.append(Policy.Fascist)
         for _ in range(1, 7):
-            self.__drawPile.append(Policy.liberal)
+            self.__drawPile.append(Policy.Liberal)
         self.__shuffle()
 
     def __shuffle(self):
