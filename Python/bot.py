@@ -61,7 +61,7 @@ async def launch(ctx):
 
 @bot.command()
 async def join(ctx):
-    if not inChannel(ctx):
+    if not await inChannel(ctx):
         return
     else:
         if board.state == BoardState.Inactive:
@@ -83,7 +83,7 @@ async def join(ctx):
 
 @bot.command()
 async def begin(ctx):
-    if not inChannel(ctx):
+    if not await inChannel(ctx):
         return
     elif board.state == BoardState.Inactive:
         await ctx.send(
@@ -113,9 +113,9 @@ async def begin(ctx):
 
 @bot.command()
 async def table(ctx):
-    if not inChannel(ctx):
+    if not await inChannel(ctx):
         return
-    elif not activeBoard(ctx):
+    elif not await activeBoard(ctx):
         return
     else:
         tableEmbed, file_embed = board.getTableEmbed()
@@ -125,9 +125,9 @@ async def table(ctx):
 
 @bot.command()
 async def t(ctx):
-    if not inChannel(ctx):
+    if not await inChannel(ctx):
         return
-    elif not activeBoard(ctx):
+    elif not await activeBoard(ctx):
         return
     else:
         tableEmbed, file_embed = board.getTableEmbed()
@@ -137,9 +137,9 @@ async def t(ctx):
 
 @bot.command()
 async def p(ctx):
-    if not validSource(ctx):
+    if not await validSource(ctx):
         return
-    elif not activeBoard(ctx):
+    elif not await activeBoard(ctx):
         return
     else:
         if ctx.author.id != board.president.id:
@@ -168,11 +168,11 @@ async def p(ctx):
 
 @bot.command()
 async def v(ctx):
-    if not validSource(ctx):
+    if not await validSource(ctx):
         return
-    elif not activeBoard(ctx):
+    elif not await activeBoard(ctx):
         return
-    elif not playerInGame(ctx):
+    elif not await playerInGame(ctx):
         return
     elif board.roundType != RoundType.Election:
         await ctx.send(
