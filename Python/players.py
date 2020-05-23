@@ -10,11 +10,7 @@ class Vote(Enum):
 
 
 class Player:
-    def __init__(self, id: str, name: str, avatar: str, isbot: bool, user=None):
-        self.__id = id
-        self.__name = name
-        self.__avatar = avatar
-        self.__isbot = isbot
+    def __init__(self, user):
         self.__user = user
         self.__role = None
         self.__rolePic = None
@@ -23,25 +19,17 @@ class Player:
     def __str__(self):
         return vars(self)
 
-    @classmethod
-    def from_Discord(cls, user):
-        return cls(user.id, user.name, user.avatar_url, user.bot, user)
-
     @property
     def id(self) -> str:
-        return self.__id
+        return self.__user.id
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self.__user.name
 
     @property
     def avatar(self) -> str:
-        return self.__avatar
-
-    @property
-    def isbot(self) -> bool:
-        return self.__isbot
+        return self.__user.avatar_url
 
     @property
     def role(self) -> str:
@@ -72,5 +60,4 @@ class Player:
         self.__vote = newVote
 
     async def send(self, fileObj, embedObj):
-        if self.__user:
-            await self.__user.send(file=fileObj, embed=embedObj)
+        await self.__user.send(file=fileObj, embed=embedObj)

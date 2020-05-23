@@ -77,8 +77,7 @@ class Board:
     def getDMChannelIDs(self):
         dm_channelID = dict()
         for player in self.__players:
-            if not player.isbot:
-                dm_channelID[player.id] = player.dmChannelID
+            dm_channelID[player.id] = player.dmChannelID
         return dm_channelID
 
 
