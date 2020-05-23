@@ -1,14 +1,15 @@
 
 import random
 from enum import Enum
-from typing import Type
 
 import discord
 from discord import Embed, File
 
-from players import Player, Vote
+from ballot_box import BallotBox, Vote
+from players import Player
 from setup import Setup, SetupType
 from static_data import colours, images
+
 
 # from PIL import Image
 
@@ -45,6 +46,7 @@ class Board:
         self.__prevChancellorID = None
         self.__gameBoard = None
         self.__roundType = RoundType.Nomination
+        self.__ballotBox = BallotBox()
 
     def open(self, channel, boardOwner, messageToEdit):
         self.__channel = channel
@@ -168,10 +170,11 @@ class Board:
                 else:
                     val = "Waiting for chancellor nomination"
             elif self.__roundType == RoundType.Election:
-                if p.vote is None:
+                playerVote = self.__ballotBox.getVote(p.id)
+                if playerVote is None:
                     val = "Yet to vote"
                 else:
-                    val = f"Voted {p.vote}"
+                    val = f"Voted {playerVote}"
             elif self.roundType == RoundType.Election:
                 if p.id == self.__chancellor.id:
                     val = "Current Chancellor"
@@ -180,27 +183,20 @@ class Board:
             tableEmbed.add_field(name=p.name, value=val)
         return tableEmbed, file_embed
 
-    def setPlayerVote(self, playerID, vote : Vote) -> bool:
-        check = True
-        for player in self.__players:
-            if player.id == playerID and player.vote is None:
-                player.vote = vote
-            if not player.vote:
-                check = False
-        return check
-            
-    def clearVotes(self):
-        for player in self.__players:
-                player.vote = None
+    def vote(self, playerID, vote: Vote):
+        self.__ballotBox.vote(playerID, vote)
 
-    def countVotes(self) -> (bool, int, int):
-        jc, nc = 0, 0
-        for player in self.__players:
-            if player.vote == Vote.ja:
-                jc +=1
-            elif player.vote == Vote.nein:
-                nc +=1
-        return jc > nc, jc, nc
+    def clearVotes(self):
+        self.__ballotBox.clear()
+
+    def votingComplete(self) -> bool:
+        return len(self.__players) == self.__ballotBox.getTotalVoteCount()
+
+    def getVoteSplit(self) -> (int, int):
+        self.__ballotBox.getVoteSplit()
+
+    def electionResult(self) -> Vote:
+        return self.__ballotBox.result()
 
     @property
     def channel(self):
