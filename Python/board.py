@@ -44,7 +44,6 @@ class Board:
         self.__chancellor = None
         self.__prevPresidentID = None
         self.__prevChancellorID = None
-        self.__gameBoard = None
         self.__roundType = RoundType.Nomination
         self.__ballotBox = BallotBox()
 
@@ -229,10 +228,6 @@ class Board:
     @property
     def president(self):
         return self.__players[self.__presidentIndex]
-
-    @property
-    def gameBoard(self):
-        return self.__gameBoard
 
     @property
     def prevPresidentID(self):
