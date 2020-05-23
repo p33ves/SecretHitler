@@ -7,6 +7,7 @@ import discord
 from discord import Embed, File
 
 from players import Player, Vote
+from setup import Setup, SetupType
 from static_data import colours, images
 
 # from PIL import Image
@@ -29,12 +30,6 @@ class RoundType(Enum):
 
     def __str__(self):
         return self.name
-
-
-class BoardType(Enum):
-    FiveToSix = 1
-    SevenToEight = 2
-    NineToTen = 3
 
 
 class Board:
@@ -83,13 +78,8 @@ class Board:
 
     async def generateAndSendRoles(self):
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
-        reqdRoles = rolesList[: len(self.__players)]
-        if len(self.__players) < 7:
-            self.__boardType = BoardType.FiveToSix
-        elif len(self.__players) < 9:
-            self.__boardType = BoardType.SevenToEight
-        else:
-            self.__boardType = BoardType.NineToTen
+        reqdRoles = rolesList[: self.getPlayerCount()]
+        self.__setup = Setup(self.getPlayerCount())
         random.shuffle(self.__players)
         random.shuffle(reqdRoles)
         self.__facists = dict()
@@ -105,7 +95,6 @@ class Board:
                 p.role = "Hitler"
                 p.rolePic = images["role.png"]["Hitler"]
                 self.__hitler = {p.id: p.name}
-        self.__gameBoard = images["baseboard.png"][self.__boardType.name]
         await self.__sendRoles()
 
     async def __sendRoles(self):
@@ -115,15 +104,15 @@ class Board:
                 col = "BLUE"
             elif player.role == "Facist":
                 col = "ORANGE"
-                if self.__boardType == BoardType.FiveToSix:
+                if self.setup.setupType == SetupType.FiveToSix:
                     desc = f"Hitler is ***{list(self.hitler.values())[0]}***"
-                elif self.__boardType == BoardType.SevenToEight:
+                elif self.setup.setupType == SetupType.SevenToEight:
                     desc = f"Your fellow facist is *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
                 else:
                     desc = f"Your fellow facists are *{[val for key, val in self.facists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
             else:
                 col = "RED"
-                if self.__boardType == BoardType.FiveToSix:
+                if self.setup.setupType == SetupType.FiveToSix:
                     desc = f"*{list(self.facists.values())[0]}* is the facist"
                 else:
                     desc = "You don't know who the other facists are!"
@@ -164,7 +153,7 @@ class Board:
             description=desc,
             colour=colours[col],
         )
-        file_embed = discord.File(self.__gameBoard, filename="board.png")
+        file_embed = discord.File(self.setup.gameBoard, filename="board.png")
         tableEmbed.set_author(
             name=self.president.name, icon_url=self.president.avatar
         )
@@ -230,8 +219,8 @@ class Board:
         return self.__messageToEdit
 
     @property
-    def boardType(self):
-        return self.__boardType
+    def setup(self):
+        return self.__setup
 
     @property
     def facists(self):
