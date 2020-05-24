@@ -1,11 +1,13 @@
 from PIL import Image
 
-board = Image.open("./images/Board1.png")
-print(board.size)
+base = Image.open("./images/Policy_Base.png")
+print(base.size)
 
-dot = Image.open("./images/Policy_Fascist.png")
-print(dot.size)
+bcard = Image.open("./images/Policy_Liberal.png")
+rcard = Image.open("./images/Policy_Fascist.png")
+print(bcard.size)
 
-new = board.copy()
-new.paste(dot, (894, 456), dot)
+new = base.copy()
+new.paste(rcard, (120, 117), rcard)
+new.paste(rcard, (360, 117), rcard)
 new.show()

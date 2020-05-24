@@ -5,12 +5,8 @@ class Vote(Enum):
     nein = 0
     ja = 1
 
-    def __str__(self):
-        return self.name
-
 
 class BallotBox:
-
     def __init__(self):
         self.__votedJa = []
         self.__votedNein = []
@@ -25,7 +21,7 @@ class BallotBox:
     def getTotalVoteCount(self) -> int:
         return len(self.__votedJa) + len(self.__votedNein)
 
-    def getVoteSplit(self) -> ():
+    def getVoteSplit(self) -> tuple():
         return len(self.__votedJa), len(self.__votedNein)
 
     def result(self) -> Vote:

@@ -55,6 +55,17 @@ images = {
         "Fascist" : "./images/Policy_Fascist.png",
         "Liberal" : "./images/Policy_Liberal.png"
     },
+    "presidentdeck.png" : [
+        "./images/PolicyBBB.png",
+        "./images/PolicyBBR.png",
+        "./images/PolicyBRR.png",
+        "./images/PolicyRRR.png"
+    ],
+    "chancellordeck.png" : [
+        "./images/PolicyBB.png",
+        "./images/PolicyBR.png",
+        "./images/PolicyRR.png"
+    ],
     "party.png" : {
         "hidden" : "./images/PartyMembership.png",
         "Fascist" : "./images/PartyFascist.png",

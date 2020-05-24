@@ -1,18 +1,14 @@
-
 import random
 from enum import Enum
 
 import discord
-from discord import Embed, File
+from PIL import Image
 
 from ballot_box import BallotBox, Vote
+from game import GameStage
 from players import Player
 from policypile import Policy, PolicyPile
-from setup import Setup, SetupType
-from static_data import colours, images
-
-
-# from PIL import Image
+from static_data import colours, coordinates, images
 
 
 class BoardState(Enum):
@@ -20,290 +16,290 @@ class BoardState(Enum):
     Open = 1
     Active = 2
 
-    def __str__(self):
-        return self.name
+
+class Power(Enum):
+    getParty = 1
+    peekTop3 = 2
+    nextPresident = 3
+    kill = 4
+    killVeto = 5
 
 
-class RoundType(Enum):
-    Nomination = 0
-    Election = 1
-    Legislation_Pres = 2
-    Legislation_Chanc = 3
-    Execution = 4
+class BoardType(Enum):
+    FiveToSix = 1
+    SevenToEight = 2
+    NineToTen = 3
 
-    def __str__(self):
-        return self.name
+    def getBaseBoard(self) -> str:
+        return images["baseboard.png"][self.name]
+
+    def getPowers(self, cardIndex: int) -> Power:
+        powers = {4: Power.kill, 5: Power.killVeto}
+        if self.value == 3:
+            powers[1] = Power.getParty
+        if self.value > 1:
+            powers[3] = Power.nextPresident
+            powers[2] = Power.getParty
+        elif self.value == 1:
+            powers[3] = Power.peekTop3
+        else:
+            raise Exception
+        if cardIndex in powers.keys():
+            return powers[cardIndex]
+        return None
 
 
 class Board:
     def __init__(self):
-        self.__channel = None
-        self.__owner = None
         self.__state = BoardState.Inactive
         self.__messageToEdit = None
-        self.__players = list()
-        self.__presidentIndex = 0
-        self.__chancellor = None
-        self.__prevPresidentID = None
-        self.__prevChancellorID = None
-        self.__roundType = RoundType.Nomination
+        self.__type = None
+        self.__playerCount = 0
+        self.__base = None
         self.__ballotBox = BallotBox()
         self.__policyPile = PolicyPile()
+        self.__failedElection = 0
+        self.__fascistPolicies = 0
+        self.__liberalPolicies = 0
 
-    def open(self, channel, boardOwner, messageToEdit):
-        self.__channel = channel
-        self.__owner = boardOwner
-        self.__messageToEdit = messageToEdit
-        self.__state = BoardState.Open
+    @property
+    def type(self) -> BoardType:
+        return self.__type
 
-    def addPlayer(self, player: Player):
-        if len(self.__players) > 9:
-            raise Exception
-        self.__players.append(player)
+    def setType(self, numOfPlayers: int):
+        if numOfPlayers < 7:
+            self.__type = BoardType.FiveToSix
+        elif numOfPlayers < 9:
+            self.__type = BoardType.SevenToEight
+        else:
+            self.__type = BoardType.NineToTen
+        self.__playerCount = numOfPlayers
+        self.__base = self.__type.getBaseBoard()
 
-    def hasEnoughPlayers(self) -> bool:
-        return len(self.__players) > 4
+    def clearEdit(self):
+        self.__messageToEdit = None
 
-    def getPlayers(self):
-        return self.__players.copy()
-
-    def getPlayerCount(self) -> int:
-        return len(self.__players)
-
-    def checkPlayerID(self, id: int) -> bool:
-        return id in [p.id for p in self.getPlayers()]
-
-    def getDMChannelIDs(self):
-        dm_channelID = dict()
-        for player in self.__players:
-            dm_channelID[player.id] = player.dmChannelID
-        return dm_channelID
-
-
-    async def generateAndSendRoles(self):
-        rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
-        reqdRoles = rolesList[: self.getPlayerCount()]
-        self.__setup = Setup(self.getPlayerCount())
-        random.shuffle(self.__players)
-        random.shuffle(reqdRoles)
-        self.__fascists = dict()
-        for i, p in enumerate(self.__players):
-            if reqdRoles[i] == "L":
-                p.role = "Liberal"
-                p.rolePic = random.choice(images["role.png"]["Liberal"])
-            elif reqdRoles[i] == "F":
-                p.role = "Fascist"
-                p.rolePic = random.choice(images["role.png"]["Fascist"])
-                self.__fascists[p.id] = p.name
-            else:
-                p.role = "Hitler"
-                p.rolePic = images["role.png"]["Hitler"]
-                self.__hitler = {p.id: p.name}
-        await self.__sendRoles()
-
-    async def __sendRoles(self):
-        for player in self.__players:
-            if player.role == "Liberal":
-                desc = "For justice, liberty and equality!"
-                col = "BLUE"
-            elif player.role == "Fascist":
-                col = "ORANGE"
-                if self.setup.setupType == SetupType.FiveToSix:
-                    desc = f"Hitler is ***{list(self.hitler.values())[0]}***"
-                elif self.setup.setupType == SetupType.SevenToEight:
-                    desc = f"Your fellow fascist is *{[val for key, val in self.fascists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
-                else:
-                    desc = f"Your fellow fascists are *{[val for key, val in self.fascists.items() if key != player.id]}*, Hitler is ***{list(self.hitler.values())[0]}***"
-            else:
-                col = "RED"
-                if self.setup.setupType == SetupType.FiveToSix:
-                    desc = f"*{list(self.fascists.values())[0]}* is the fascist"
-                else:
-                    desc = "You don't know who the other fascists are!"
-            roleEmbed = Embed(
-                title=f"You are ***{player.role}***",
-                colour=colours[col],
-                description=desc,
-            )
-            file_embed = File(f"{player.rolePic}", filename="role.png")
-            roleEmbed.set_author(name=player.name, icon_url=player.avatar)
-            roleEmbed.set_image(url="attachment://role.png")
-            await player.send(file_embed, roleEmbed)
-
-    def nextPresident(self, newIndex=None):
-        if newIndex is None:
-            newIndex = self.__presidentIndex + 1
-        self.__prevPresidentID = self.president.id
-        self.__presidentIndex = newIndex
-        if self.__chancellor:
-            self.__prevChancellorID = self.__chancellor.id
-            self.__chancellor = None
-
-    def setChancellor(self, chancellorID):
-        for p in self.__players:
-            if p.id == chancellorID:
-                self.__chancellor = p
-
-    def getTableEmbed(self):
-        if self.__roundType == RoundType.Nomination:
-            desc = f"<@!{self.president.id}>, please pick the chancellor by typing *sh!p @<candidate name>*"
-            col = "PURPLE"
-        elif self.__roundType == RoundType.Election:
-            desc = "All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
-            col = "GREY"
-        tableEmbed = discord.Embed(
-            title=f"***\t {self.__roundType} Stage***",
-            description=desc,
-            colour=colours[col],
-        )
-        file_embed = discord.File(self.setup.gameBoard, filename="board.png")
-        tableEmbed.set_author(
-            name=self.president.name, icon_url=self.president.avatar
-        )
-        for p in self.getPlayers():
-            if self.__roundType == RoundType.Nomination:
-                if p.id == self.president.id:
-                    val = "Current President"
-                elif p.id == self.__prevChancellorID:
-                    val = "Previous Chancellor"
-                elif p.id == self.__prevPresidentID:
-                    val = "Previous President"
-                else:
-                    val = "Waiting for chancellor nomination"
-            elif self.__roundType == RoundType.Election:
-                playerVote = self.__ballotBox.getVote(p.id)
-                if playerVote is None:
-                    val = "Yet to vote"
-                else:
-                    val = f"Voted {playerVote}"
-            elif self.roundType == RoundType.Election:
-                if p.id == self.__chancellor.id:
-                    val = "Current Chancellor"
-                else:
-                    val = "Yet to vote"
-            tableEmbed.add_field(name=p.name, value=val)
-        return tableEmbed, file_embed
-
-    def vote(self, playerID, vote: Vote):
+    def markVote(self, playerID: int, vote: str):
         self.__ballotBox.vote(playerID, vote)
+        return self.__votingComplete()
 
-    def clearVotes(self):
-        self.__ballotBox.clear()
-
-    def votingComplete(self) -> bool:
-        return len(self.__players) == self.__ballotBox.getTotalVoteCount()
-
-    def getVoteSplit(self) -> (int, int):
-        return self.__ballotBox.getVoteSplit()
-
-    def electionResult(self) -> Vote:
+    def electionResult(self) -> tuple():
+        self.clearEdit()
         if self.__ballotBox.result() == Vote.nein:
-            self.setup.failedElection += 1
-        return self.__ballotBox.result()
+            self.__failedElection += 1
+        return (
+            self.__ballotBox.result(),
+            self.__ballotBox.getVoteSplit(),
+            self.__failedElection,
+        )
 
-    def startLegislation(self):
-        self.__roundType = RoundType.Legislation_Pres
+    def endLegislation(self, picked: Policy) -> tuple():
+        self.__policyPile.acceptPolicy(picked)
+        return (
+            self.__placePolicy(picked),
+            self.__fascistPolicies,
+            self.__liberalPolicies,
+        )
+
+    async def openBoard(self, channel: channel, user: user):
+        self.__state = BoardState.Open
+        playersEmbed = discord.Embed(
+            title="**\t Player List **",
+            description="A board has been opened. Please enter *sh!join* if you wish to join the game.",
+            colour=colours["AQUA"],
+        )
+        file_embed = discord.File(images["banner.jpg"], filename="banner.jpg")
+        playersEmbed.set_author(name=user.name, icon_url=user.avatar_url)
+        playersEmbed.set_image(url="attachment://banner.jpg")
+        playersEmbed.set_footer(text="Player limit: 5-10")
+        self.__messageToEdit = await channel.send(file=file_embed, embed=playersEmbed)
+
+    async def joinBoard(self, channel: channel, userName: str, playerCount: int):
+        if await self.__checkBoardState(channel, userName, "Open"):
+            newEmbed = self.__messageToEdit.embeds[0].copy()
+            newEmbed.set_image(url="attachment://banner.jpg")
+            newEmbed.add_field(name=playerCount + 1, value=userName)
+            newEmbed.set_footer(text=f"{playerCount+1}/10 players joined")
+            return await self.__messageToEdit.edit(embed=newEmbed)
+
+    async def beginBoard(self, channel: channel, userName: str):
+        if await self.__checkBoardState(channel, userName, "Open"):
+            self.__state = BoardState.Active
+            self.__messageToEdit = None
+            await channel.send(
+                "*The year is 1932. The place is pre-WWII Germany. "
+                "In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. "
+                "Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler. "
+                "Your roles will be sent to you as a Private Message. The future of the world depends on you."
+                "So play wisely and remember, trust* ***no one.***"
+            )
+            return True
+
+    async def showBoard(
+        self,
+        channel: channel,
+        stage: GameStage,
+        players: list(),
+        president: Player,
+        chancellor: Player,
+        prevPresidentID: int,
+        prevChancellorID: int,
+        power: str,
+    ):
+        def getEmbed():
+            if stage == GameStage.Nomination:
+                desc = f"<@!{president.id}>, please pick the chancellor by typing *sh!p @<candidate name>*"
+                col = "PURPLE"
+            elif stage == GameStage.Election:
+                desc = "All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
+                col = "GREY"
+            elif stage == GameStage.Execution:
+                col = "DARK_VIVID_PINK"
+                if not power:
+                    raise Exception
+                elif power == Power.getParty:
+                    desc = f"<@!{president.id}>, please pick a player to inspect their party membership by typing *sh!p @<candidate name>*"
+                elif power == Power.nextPresident:
+                    desc = f"<@!{president.id}>, please pick a player to choose as the next President by typing *sh!p @<candidate name>*"
+                elif power == Power.peekTop3:
+                    desc = f"<@!{president.id}>, please pick see the next 3 policies from the draw pile by typing *sh!see*"
+                elif power == Power.kill:
+                    desc = f"<@!{president.id}>, please pick a player to assassinate by typing *sh!p @<candidate name>*"
+                elif power == Power.killVeto:
+                    desc = f"<@!{president.id}>, please pick a player to assassinate by typing *sh!p @<candidate name>* and to veto the policies drawn in this round, type *sh!veto*"
+            tableEmbed = discord.Embed(
+                title=f"***\t {stage.name}*** Stage",
+                description=desc,
+                colour=colours[col],
+            )
+            file_embed = discord.File(self.__getImage(), filename="board.png")
+            tableEmbed.set_author(name=president.name, icon_url=president.avatar_url)
+            for player in players:
+                if not player.isDead:
+                    if stage == GameStage.Nomination:
+                        if player.id == president.id:
+                            val = "Current President"
+                        elif player.id == prevChancellorID:
+                            val = "Previous Chancellor"
+                        elif player.id == prevPresidentID:
+                            val = "Previous President"
+                        else:
+                            val = "Waiting for chancellor nomination"
+                    elif stage == GameStage.Election:
+                        playerVote = self.__ballotBox.getVote(player.id)
+                        if playerVote is None:
+                            val = "Yet to vote"
+                        else:
+                            val = f"Voted {playerVote}"
+                    elif stage == GameStage.Legislation:
+                        if player.id == president.id or player.id == chancellor.id:
+                            val = "Picking policy"
+                        else:
+                            val = "Waiting for Policy legislation"
+                    elif stage == GameStage.Execution:
+                        if player.id == president.id:
+                            val = "Enacting policy"
+                        else:
+                            val = "Waiting for Policy execution"
+                    tableEmbed.add_field(name=player.name, value=val)
+                else:
+                    tableEmbed.add_field(name=f"~~{player.name}~~", value="Dead")
+            return file_embed, tableEmbed
+
+        file_embed, tableEmbed = await getEmbed()
+        tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
+        if not self.__messageToEdit:
+            self.__messageToEdit = await channel.send(file=file_embed, embed=tableEmbed)
+        else:
+            await self.__messageToEdit.edit(embed=tableEmbed)
+
+    async def presidentTurn(self, channel, president: Player) -> list():
         shuffled = self.__policyPile.draw()
         cardsInPlay = self.__policyPile.peekCardsInPlay()
         if shuffled:
-            self.channel.send("The deck has been reshuffled and there are {}".format(self.__policyPile.noOfCardsInDeck))
-            pass
-        # TODO get image
-        cardsEmbed = Embed(
-            title=f"***\t Discard one Policy***",
-            description="Type Fascist or Liberal to discard from the given choices \n The cards are {}".format(
-                cardsInPlay),
-            colour=colours["GREY"]
-        )
-        self.president.send(None, cardsEmbed)
-
-    def setPresidentDiscard(self, policy: Policy):
-        cardsInPlay = self.__policyPile.peekCardsInPlay()
-        if not policy in cardsInPlay:
-            cardsEmbed = Embed(
-                title=f"***\t Discard one Policy***",
-                description="Incorrect choice try again. \n The cards are {}".format(
-                    cardsInPlay),
-                colour=colours["GREY"]
+            await channel.send(
+                f"The deck has been reshuffled and there are {self.__policyPile.noOfCardsInDeck}"
             )
-            self.president.send(None, cardsEmbed)
-            pass
-        else:
-            self.__policyPile.discardPolicy(policy)
-            self.roundType = RoundType.Legislation_Chanc
-            # tell chanc to pick policy:
+        file_embed = discord.File(
+            images["presidentdeck.png"][cardsInPlay.count(Policy.Fascist)],
+            filename="policydeck.png",
+        )
+        cardsEmbed = discord.Embed(
+            title=f"\t **Discard** one Policy",
+            description="Type *sh!p <color/name>* of the card that you wish to discard from the 3 given below: ",
+            colour=colours["DARK_AQUA"],
+        )
+        cardsEmbed.set_image(url="attachment://policydeck.png")
+        await president.send(file=file_embed, embed=cardsEmbed)
+        return cardsInPlay
 
-    def setChancellorPick(self, policy: Policy):
+    async def chancellorTurn(self, chancellor: Player, discarded: Policy) -> list():
+        self.__policyPile.discardPolicy(discarded)
         cardsInPlay = self.__policyPile.peekCardsInPlay()
-        if not policy in cardsInPlay:
-            # tell chanc to pick again
-            pass
-        else:
-            self.__policyPile.acceptPolicy(policy)
-            self.__executePolicy(policy)
+        file_embed = discord.File(
+            images["chancellordeck.png"][cardsInPlay.count(Policy.Fascist)],
+            filename="policydeck.png",
+        )
+        cardsEmbed = discord.Embed(
+            title=f"\t **Pick** one Policy",
+            description="Type *sh!p <color/name>* of the card that you wish to enact from the 2 given below: ",
+            colour=colours["GOLD"],
+        )
+        cardsEmbed.set_image(url="attachment://policydeck.png")
+        await chancellor.send(file=file_embed, embed=cardsEmbed)
+        return cardsInPlay
 
-    def __executePolicy(self, policy: Policy):
-        # put policy in state deck
-        # do action for policy
-        pass
+    async def executeTop3(self, president: Player):
+        top3 = self.__policyPile.peekTop3()
+        file_embed = discord.File(
+            images["presidentdeck.png"][top3.count(Policy.Fascist)],
+            filename="policydeck.png",
+        )
+        cardsEmbed = discord.Embed(
+            title="\t Next cards in the draw pile", colour=colours["DARK_AQUA"],
+        )
+        cardsEmbed.set_image(url="attachment://policydeck.png")
+        await president.send(file=file_embed, embed=cardsEmbed)
 
-    @property
-    def channel(self):
-        return self.__channel
+    async def failedElectionReset(self, channel) -> tuple():
+        top = self.__policyPile.placeTopPolicy()
+        self.__placePolicy(top)
+        await channel.send(
+            f"A {top.name} policy has been picked from the draw pile and has been placed"
+        )
+        self.__failedElection = 0
+        return self.__fascistPolicies, self.__liberalPolicies
 
-    @property
-    def owner(self):
-        return self.__owner
+    def __votingComplete(self) -> bool:
+        return self.__playerCount == self.__ballotBox.getTotalVoteCount()
 
-    @property
-    def state(self) -> BoardState:
-        return self.__state
+    def __getImage(self) -> str:
+        baseImg = Image.open(self.__base)
+        dot = Image.open(images["dot.png"])
+        new = baseImg.copy()
+        new.paste(dot, coordinates["failedElection"][self.__failedElection], dot)
+        new.save(images["currentboard.png"], "PNG")
+        return images["currentboard.png"]
 
-    @property
-    def messageToEdit(self):
-        return self.__messageToEdit
+    def __placePolicy(self, card: Policy) -> Power:
+        baseImg = Image.open(self.__base)
+        new = baseImg.copy()
+        power = None
+        if card == Policy.Fascist:
+            cardImg = Image.open(card.getImageUrl())
+            new.paste(cardImg, coordinates[card.name][self.__fascistPolicies])
+            self.__fascistPolicies += 1
+            power = self.__type.getPowers(self.__fascistPolicies)
+        elif card == Policy.Liberal:
+            cardImg = Image.open(card.getImageUrl())
+            new.paste(cardImg, coordinates[card.name][self.__liberalPolicies])
+            self.__liberalPolicies += 1
+        new.save(images["newbase.png"], "PNG")
+        self.__base = images["newbase.png"]
+        return power
 
-    @property
-    def setup(self):
-        return self.__setup
-
-    @property
-    def fascists(self):
-        return self.__fascists
-
-    @property
-    def hitler(self):
-        return self.__hitler
-
-    @property
-    def president(self) -> Player:
-        return self.__players[self.__presidentIndex]
-
-    @property
-    def prevPresidentID(self):
-        return self.__prevPresidentID
-
-    @property
-    def prevChancellorID(self):
-        return self.__prevChancellorID
-
-    @property
-    def roundType(self):
-        return self.__roundType
-
-    @property
-    def chancellor(self):
-        return self.__chancellor
-
-    @state.setter
-    def state(self, newState: BoardState):
-        # TODO define exception
-        self.__state = newState
-
-    @roundType.setter
-    def roundType(self, newInput: int):
-        self.__roundType = newInput
-
-    @messageToEdit.setter
-    def messageToEdit(self, message):
-        self.__messageToEdit = message
+    async def __checkBoardState(self, channel: channel, userName: str, stateName: str):
+        if self.__state != BoardState[stateName]:
+            await channel.send(f"Sorry {userName}, the board is not {stateName}")
+            return False
+        return True
