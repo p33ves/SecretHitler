@@ -16,24 +16,15 @@ class Policy(Enum):
         }
         return imageUrls[self.value]
 
-    def __repr__(self):
-        return self.name
-
     @staticmethod
     def getEnum(policy: str):
         policy = policy.lower()
-        if (policy == "fascist" or
-                policy == "red" or
-                policy == "r"):
+        if policy == "fascist" or policy == "red" or policy == "r":
             return Policy.Fascist
-        elif (policy == "liberal" or
-              policy == "blue" or
-              policy == "b"):
+        elif policy == "liberal" or policy == "blue" or policy == "b":
             return Policy.Liberal
         else:
             return None
-
-
 
 
 class PolicyPile:
@@ -88,6 +79,9 @@ class PolicyPile:
 
     def peekTop3(self):  # returns the top three cards on the deck
         return self.__drawPile[0:3]
+
+    def placeTopPolicy(self) -> Policy:
+        return self.__drawPile.pop(0)
 
     @property
     def noOfCardsInDeck(self) -> int:
