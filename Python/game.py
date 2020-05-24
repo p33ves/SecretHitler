@@ -22,7 +22,7 @@ class GameStage(Enum):
 
 
 class Game:
-    def __init__(self, channel: channel, user: user):
+    def __init__(self, channel, user):
         self.__channel = channel
         self.__owner = user
         self.__board = Board()
@@ -76,7 +76,7 @@ class Game:
             self.__stage = GameStage.Nomination
             await self.__board.showBoard(
                 self.__channel,
-                self.__stage,
+                self.__stage.name,
                 self.__players,
                 self.president,
                 self.chancellor,
@@ -121,7 +121,7 @@ class Game:
                         self.__board.clearEdit()
                         await self.__board.showBoard(
                             self.__channel,
-                            self.__stage,
+                            self.__stage.name,
                             self.__players,
                             self.president,
                             self.chancellor,
@@ -168,7 +168,7 @@ class Game:
                     self.__stage = GameStage.Nomination
                 await self.__board.showBoard(
                     self.__channel,
-                    self.__stage,
+                    self.__stage.name,
                     self.__players,
                     self.president,
                     self.chancellor,
@@ -255,7 +255,7 @@ class Game:
                         self.__board.clearEdit()
                         await self.__board.showBoard(
                             self.__channel,
-                            self.__stage,
+                            self.__stage.name,
                             self.__players,
                             self.president,
                             self.chancellor,
@@ -281,7 +281,7 @@ class Game:
                 votingComplete = self.__board.markVote(ctx.author.id, args[0])
                 await self.__board.showBoard(
                     self.__channel,
-                    self.__stage,
+                    self.__stage.name,
                     self.__players,
                     self.president,
                     self.chancellor,
@@ -331,7 +331,7 @@ class Game:
                         self.__board.clearEdit()
                         await self.__board.showBoard(
                             self.__channel,
-                            self.__stage,
+                            self.__stage.name,
                             self.__players,
                             self.president,
                             self.chancellor,
@@ -361,7 +361,7 @@ class Game:
             )
             await self.__board.showBoard(
                 self.__channel,
-                self.__stage,
+                self.__stage.name,
                 self.__players,
                 self.president,
                 self.chancellor,
@@ -434,9 +434,11 @@ class Game:
     async def __sendRoles(self):
         for player in self.__players:
             if player.id in self.__fascists.keys() or player.id in self.__hitler.keys():
-                await player.sendRole(self.__board.type, self.__fascists, self.__hitler)
+                await player.sendRole(
+                    self.__board.type.name, self.__fascists, self.__hitler
+                )
             else:
-                await player.sendRole(self.__board.type)
+                await player.sendRole(self.__board.type.name)
 
     async def __startLegislation(self):
         self.__cardsInPlay = await self.__board.presidentTurn(

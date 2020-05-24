@@ -4,7 +4,6 @@ from enum import Enum
 import discord
 from discord import Embed, File
 
-from board import BoardType
 from static_data import images, colours
 
 
@@ -62,7 +61,7 @@ class Player:
     def setRole(self, role: Role):
         self.__role = Role
 
-    async def sendRole(self, boardType: BoardType, fascists=None, hitler=None):
+    async def sendRole(self, boardType, fascists=None, hitler=None):
         if self.__role == Role.Liberal:
             desc = "For justice, liberty and equality!"
             col = "BLUE"
@@ -90,7 +89,7 @@ class Player:
         roleEmbed.set_image(url="attachment://role.png")
         await self.__send(file_embed, roleEmbed)
 
-    async def revealParty(self, president: Player):
+    async def revealParty(self, president):
         partyName, partyPic, colour = self.__role.getParty()
         partyEmbed = Embed(
             title=f"{self.name} is from ***{partyName}*** party",
