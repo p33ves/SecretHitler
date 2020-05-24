@@ -5,7 +5,7 @@ import discord
 from PIL import Image
 
 from ballot_box import BallotBox, Vote
-from game import GameStage
+
 from players import Player
 from policypile import Policy, PolicyPile
 from static_data import colours, coordinates, images
@@ -101,7 +101,7 @@ class Board:
             self.__liberalPolicies,
         )
 
-    async def openBoard(self, channel: channel, user: user):
+    async def openBoard(self, channel, user):
         self.__state = BoardState.Open
         playersEmbed = discord.Embed(
             title="**\t Player List **",
@@ -114,7 +114,7 @@ class Board:
         playersEmbed.set_footer(text="Player limit: 5-10")
         self.__messageToEdit = await channel.send(file=file_embed, embed=playersEmbed)
 
-    async def joinBoard(self, channel: channel, userName: str, playerCount: int):
+    async def joinBoard(self, channel, userName: str, playerCount: int):
         if await self.__checkBoardState(channel, userName, "Open"):
             newEmbed = self.__messageToEdit.embeds[0].copy()
             newEmbed.set_image(url="attachment://banner.jpg")
@@ -122,7 +122,7 @@ class Board:
             newEmbed.set_footer(text=f"{playerCount+1}/10 players joined")
             return await self.__messageToEdit.edit(embed=newEmbed)
 
-    async def beginBoard(self, channel: channel, userName: str):
+    async def beginBoard(self, channel, userName: str):
         if await self.__checkBoardState(channel, userName, "Open"):
             self.__state = BoardState.Active
             self.__messageToEdit = None
@@ -137,8 +137,8 @@ class Board:
 
     async def showBoard(
         self,
-        channel: channel,
-        stage: GameStage,
+        channel,
+        stage: str,
         players: list(),
         president: Player,
         chancellor: Player,
@@ -147,13 +147,13 @@ class Board:
         power: str,
     ):
         def getEmbed():
-            if stage == GameStage.Nomination:
+            if stage == "Nomination":
                 desc = f"<@!{president.id}>, please pick the chancellor by typing *sh!p @<candidate name>*"
                 col = "PURPLE"
-            elif stage == GameStage.Election:
+            elif stage == "Election":
                 desc = "All players, please enter *sh!v ja* -> to vote **YES** and *sh!v nein* -> to vote **NO**"
                 col = "GREY"
-            elif stage == GameStage.Execution:
+            elif stage == "Execution":
                 col = "DARK_VIVID_PINK"
                 if not power:
                     raise Exception
@@ -176,7 +176,7 @@ class Board:
             tableEmbed.set_author(name=president.name, icon_url=president.avatar_url)
             for player in players:
                 if not player.isDead:
-                    if stage == GameStage.Nomination:
+                    if stage == "Nomination":
                         if player.id == president.id:
                             val = "Current President"
                         elif player.id == prevChancellorID:
@@ -185,18 +185,18 @@ class Board:
                             val = "Previous President"
                         else:
                             val = "Waiting for chancellor nomination"
-                    elif stage == GameStage.Election:
+                    elif stage == "Election":
                         playerVote = self.__ballotBox.getVote(player.id)
                         if playerVote is None:
                             val = "Yet to vote"
                         else:
                             val = f"Voted {playerVote}"
-                    elif stage == GameStage.Legislation:
+                    elif stage == "Legislation":
                         if player.id == president.id or player.id == chancellor.id:
                             val = "Picking policy"
                         else:
                             val = "Waiting for Policy legislation"
-                    elif stage == GameStage.Execution:
+                    elif stage == "Execution":
                         if player.id == president.id:
                             val = "Enacting policy"
                         else:
@@ -298,7 +298,7 @@ class Board:
         self.__base = images["newbase.png"]
         return power
 
-    async def __checkBoardState(self, channel: channel, userName: str, stateName: str):
+    async def __checkBoardState(self, channel, userName: str, stateName: str):
         if self.__state != BoardState[stateName]:
             await channel.send(f"Sorry {userName}, the board is not {stateName}")
             return False

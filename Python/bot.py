@@ -52,8 +52,8 @@ async def launch(ctx: Context):
             f"Sorry {ctx.author.name}, a game is currently in-progress in this channel"
         )
     else:
-        currentGames[ctx.channel.id] = Game(ctx.channel.id, ctx.author.id)
-        currentUsers[ctx.channel.id] = set()
+        currentGames[ctx.channel.id] = Game(ctx.channel, ctx.author)
+        currentUsers[ctx.channel.id] = dict()
         await currentGames[ctx.channel.id].launch()
 
 
