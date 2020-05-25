@@ -59,24 +59,24 @@ class Player:
         self.__isDead = True
 
     def setRole(self, role: Role):
-        self.__role = Role
+        self.__role = role
 
-    async def sendRole(self, boardType, fascists=None, hitler=None):
+    async def sendRole(self, boardType, fascists, hitler):
         if self.__role == Role.Liberal:
             desc = "For justice, liberty and equality!"
             col = "BLUE"
         elif self.__role == Role.Fascist:
             col = "ORANGE"
             if boardType == "FiveToSix":
-                desc = f"Hitler is ***{hitler.values()[0]}***"
+                desc = f"Hitler is ***{list(hitler.values())[0]}***"
             elif boardType == "SevenToEight":
-                desc = f"Your fellow fascist is *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{hitler.values()[0]}***"
+                desc = f"Your fellow fascist is *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{list(hitler.values())[0]}***"
             else:
-                desc = f"Your fellow fascists are *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{hitler.values()[0]}***"
+                desc = f"Your fellow fascists are *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{list(hitler.values())[0]}***"
         else:
             col = "DARK_ORANGE"
             if boardType == "FiveToSix":
-                desc = f"*{fascists.values()[0]}* is the fascist"
+                desc = f"*{list(fascists.values())[0]}* is the fascist"
             else:
                 desc = "You don't know who the other fascists are!"
         roleEmbed = Embed(
@@ -87,7 +87,7 @@ class Player:
         file_embed = File(self.__role.getRolePic(), filename="role.png")
         roleEmbed.set_author(name=self.name, icon_url=self.avatar_url)
         roleEmbed.set_image(url="attachment://role.png")
-        await self.__send(file_embed, roleEmbed)
+        await self.send(file_embed, roleEmbed)
 
     async def revealParty(self, president):
         partyName, partyPic, colour = self.__role.getParty()
@@ -100,5 +100,5 @@ class Player:
         partyEmbed.set_image(url="attachment://party.png")
         await president.send(file_embed, partyEmbed)
 
-    async def __send(self, fileObj, embedObj):
+    async def send(self, fileObj, embedObj):
         await self.__user.send(file=fileObj, embed=embedObj)

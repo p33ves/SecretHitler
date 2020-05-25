@@ -100,22 +100,22 @@ class Game:
                     len(args) > 1
                     or chancellorTag[:3] != "<@!"
                     or not self.__checkPlayerID(int(chancellorTag[3:-1]))
-                    or chancellorTag[3:-1] == self.__prevChancellorID
-                    or chancellorTag[3:-1] == self.president.id
+                    or int(chancellorTag[3:-1]) == self.__prevChancellorID
+                    or int(chancellorTag[3:-1]) == self.president.id
                 ):
                     await ctx.send(
                         f"Sorry {ctx.author.name}, thats an invalid nomination, please retry!"
                     )
                 else:
-                    chancellorID = args[0][3:-1]
+                    chancellorID = int(args[0][3:-1])
                     if self.__checkDead(chancellorID):
                         await ctx.send(
                             f"Sorry {ctx.author.name}, the nominee is dead, please retry!"
                         )
                     else:
-                        self.__chancellorID = chancellorID
+                        self.__chancellorElectID = chancellorID
                         await self.__channel.send(
-                            f"{args[0]} has been nominated as the chancellor by {ctx.author.name}"
+                            f"<@!{self.chancellor.id}> has been nominated as the chancellor by {self.president.name}"
                         )
                         self.__stage = GameStage.Election
                         self.__board.clearEdit()
@@ -192,7 +192,7 @@ class Game:
                     len(args) > 1
                     or playerTag[:3] != "<@!"
                     or not self.__checkPlayerID(int(playerTag[3:-1]))
-                    or playerTag[3:-1] == self.president.id
+                    or int(playerTag[3:-1]) == self.president.id
                 ):
                     await ctx.send(
                         f"Sorry {ctx.author.name}, that's an invalid selection, please retry!"
@@ -204,13 +204,14 @@ class Game:
                 ):
                     player = None
                     for p in self.__players:
-                        if playerTag[3:-1] == p.id:
+                        if int(playerTag[3:-1]) == p.id:
                             player = p
                             break
-                        elif self.__checkDead(playerTag[3:-1]):
+                        elif self.__checkDead(int(playerTag[3:-1])):
                             await ctx.send(
                                 f"Sorry {ctx.author.name}, {player.name} is dead. Please check someone else!"
                             )
+                            return
                     if not player:
                         raise Exception
                     elif self.__power == Power.getParty:
@@ -230,13 +231,24 @@ class Game:
                             await self.__channel.send(
                                 f"{player.name} has been assassinated. RIP."
                             )
+                    self.__nextPresident()
                     self.__stage = GameStage.Nomination
                     self.__board.clearEdit()
                     self.__power = None
+                    await self.__board.showBoard(
+                        self.__channel,
+                        self.__stage.name,
+                        self.__players,
+                        self.president,
+                        self.chancellor,
+                        self.__prevPresidentID,
+                        self.__prevChancellorID,
+                        self.__power,
+                    )
                 elif self.__power == Power.nextPresident:
                     index = None
                     for i, p in enumerate(self.__players):
-                        if playerTag[3:-1] == p.id:
+                        if int(playerTag[3:-1]) == p.id:
                             index = i
                             break
                     if not index:
@@ -299,7 +311,9 @@ class Game:
                         resultTitle = "\t Election *Passed*"
                         col = "DARK_GOLD"
                         img = images["vote.png"]["Ja"]
+                        desc = "Democracy prevails"
                         self.__freezePrevious(self.president.id, self.chancellor.id)
+                        self.__stage = GameStage.Legislation
                     else:
                         if failCount == 3:
                             desc = f"The top policy will be drawn and placed"
@@ -309,6 +323,7 @@ class Game:
                         col = "DARK_RED"
                         img = images["vote.png"]["Nein"]
                         self.__stage = GameStage.Nomination
+                    self.__board.clearEdit()
                     result_embed = discord.Embed(
                         title=resultTitle, description=desc, colour=colours[col]
                     )
@@ -324,7 +339,7 @@ class Game:
                         ) = await self.__board.failedElectionReset(self.__channel)
                         if fascistsCount <= 3:
                             self.__threeFascists = True
-                        self.checkWin(fascistsCount, liberalCount)
+                        await self.checkWin(fascistsCount, liberalCount)
                     await self.__channel.send(file=file_embed, embed=result_embed)
                     if self.__stage == GameStage.Nomination:
                         self.__nextPresident()
@@ -354,6 +369,7 @@ class Game:
         else:
             await self.__board.executeTop3(self.president)
             self.__power = None
+            self.__nextPresident()
             self.__stage = GameStage.Nomination
             self.__board.clearEdit()
             await self.__channel.send(
@@ -371,7 +387,7 @@ class Game:
             )
 
     async def checkWin(self, fascistPolicies=0, liberalPolicies=0):
-        if self.__threeFascists and self.__hitler.keys()[0] == self.chancellor.id:
+        if self.__threeFascists and list(self.__hitler.keys())[0] == self.chancellor.id:
             await self.__channel.send("Facists win! Hitler has been made Chancellor")
             self.__stage = GameStage.Completed
         elif fascistPolicies == 6:
@@ -386,7 +402,7 @@ class Game:
             self.__stage = GameStage.Completed
         else:
             for player in self.__players:
-                if player.id == self.__hitler.keys()[0] and player.isDead:
+                if player.id == list(self.__hitler.keys())[0] and player.isDead:
                     await self.__channel.send(
                         "Liberals win! Hitler has been assassinated"
                     )
@@ -433,12 +449,9 @@ class Game:
 
     async def __sendRoles(self):
         for player in self.__players:
-            if player.id in self.__fascists.keys() or player.id in self.__hitler.keys():
-                await player.sendRole(
-                    self.__board.type.name, self.__fascists, self.__hitler
-                )
-            else:
-                await player.sendRole(self.__board.type.name)
+            await player.sendRole(
+                self.__board.type.name, self.__fascists, self.__hitler
+            )
 
     async def __startLegislation(self):
         self.__cardsInPlay = await self.__board.presidentTurn(
