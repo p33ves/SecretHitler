@@ -79,17 +79,22 @@ class Board:
     def clearEdit(self):
         self.__messageToEdit = None
 
-    def markVote(self, playerID: int, vote: str):
-        self.__ballotBox.vote(playerID, vote)
+    def markVote(self, playerID: int, vote: str) -> bool:
+        self.__ballotBox.vote(playerID, Vote[vote])
         return self.__votingComplete()
 
     def electionResult(self) -> tuple():
         self.clearEdit()
-        if self.__ballotBox.result() == Vote.nein:
+        result = self.__ballotBox.result()
+        voteSplit = self.__ballotBox.getVoteSplit()
+        self.__ballotBox.clear()
+        if result == Vote.nein:
             self.__failedElection += 1
+        else:
+            self.__failedElection = 0
         return (
-            self.__ballotBox.result(),
-            self.__ballotBox.getVoteSplit(),
+            result,
+            voteSplit,
             self.__failedElection,
         )
 
@@ -114,16 +119,17 @@ class Board:
         playersEmbed.set_footer(text="Player limit: 5-10")
         self.__messageToEdit = await channel.send(file=file_embed, embed=playersEmbed)
 
-    async def joinBoard(self, channel, userName: str, playerCount: int):
-        if await self.__checkBoardState(channel, userName, "Open"):
+    async def joinBoard(self, channel, userName: str, playerCount: int) -> bool:
+        if await self.__checkBoardState(channel, userName, BoardState.Open):
             newEmbed = self.__messageToEdit.embeds[0].copy()
             newEmbed.set_image(url="attachment://banner.jpg")
             newEmbed.add_field(name=playerCount + 1, value=userName)
             newEmbed.set_footer(text=f"{playerCount+1}/10 players joined")
-            return await self.__messageToEdit.edit(embed=newEmbed)
+            await self.__messageToEdit.edit(embed=newEmbed)
+            return True
 
     async def beginBoard(self, channel, userName: str):
-        if await self.__checkBoardState(channel, userName, "Open"):
+        if await self.__checkBoardState(channel, userName, BoardState.Open):
             self.__state = BoardState.Active
             self.__messageToEdit = None
             await channel.send(
@@ -168,9 +174,7 @@ class Board:
                 elif power == Power.killVeto:
                     desc = f"<@!{president.id}>, please pick a player to assassinate by typing *sh!p @<candidate name>* and to veto the policies drawn in this round, type *sh!veto*"
             tableEmbed = discord.Embed(
-                title=f"***\t {stage.name}*** Stage",
-                description=desc,
-                colour=colours[col],
+                title=f"***\t {stage}*** Stage", description=desc, colour=colours[col],
             )
             file_embed = discord.File(self.__getImage(), filename="board.png")
             tableEmbed.set_author(name=president.name, icon_url=president.avatar_url)
@@ -190,7 +194,7 @@ class Board:
                         if playerVote is None:
                             val = "Yet to vote"
                         else:
-                            val = f"Voted {playerVote}"
+                            val = f"Voted {playerVote.name}"
                     elif stage == "Legislation":
                         if player.id == president.id or player.id == chancellor.id:
                             val = "Picking policy"
@@ -206,7 +210,7 @@ class Board:
                     tableEmbed.add_field(name=f"~~{player.name}~~", value="Dead")
             return file_embed, tableEmbed
 
-        file_embed, tableEmbed = await getEmbed()
+        file_embed, tableEmbed = getEmbed()
         tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
         if not self.__messageToEdit:
             self.__messageToEdit = await channel.send(file=file_embed, embed=tableEmbed)
@@ -230,7 +234,7 @@ class Board:
             colour=colours["DARK_AQUA"],
         )
         cardsEmbed.set_image(url="attachment://policydeck.png")
-        await president.send(file=file_embed, embed=cardsEmbed)
+        await president.send(fileObj=file_embed, embedObj=cardsEmbed)
         return cardsInPlay
 
     async def chancellorTurn(self, chancellor: Player, discarded: Policy) -> list():
@@ -246,7 +250,7 @@ class Board:
             colour=colours["GOLD"],
         )
         cardsEmbed.set_image(url="attachment://policydeck.png")
-        await chancellor.send(file=file_embed, embed=cardsEmbed)
+        await chancellor.send(fileObj=file_embed, embedObj=cardsEmbed)
         return cardsInPlay
 
     async def executeTop3(self, president: Player):
@@ -259,7 +263,7 @@ class Board:
             title="\t Next cards in the draw pile", colour=colours["DARK_AQUA"],
         )
         cardsEmbed.set_image(url="attachment://policydeck.png")
-        await president.send(file=file_embed, embed=cardsEmbed)
+        await president.send(fileObj=file_embed, embedObj=cardsEmbed)
 
     async def failedElectionReset(self, channel) -> tuple():
         top = self.__policyPile.placeTopPolicy()
@@ -298,8 +302,8 @@ class Board:
         self.__base = images["newbase.png"]
         return power
 
-    async def __checkBoardState(self, channel, userName: str, stateName: str):
-        if self.__state != BoardState[stateName]:
-            await channel.send(f"Sorry {userName}, the board is not {stateName}")
+    async def __checkBoardState(self, channel, userName: str, Bstate: BoardState):
+        if self.__state != Bstate:
+            await channel.send(f"Sorry {userName}, the board is not {Bstate.name}")
             return False
         return True

@@ -66,6 +66,8 @@ async def join(ctx: Context):
             f"Sorry {ctx.author.name}, you already seem to be active in a game"
         )
     elif await currentGames[ctx.channel.id].join(ctx.author):
+        if not ctx.author.dm_channel:
+            await ctx.author.create_dm()
         currentUsers[ctx.channel.id][ctx.author.id] = ctx.author.dm_channel.id
 
 
@@ -78,21 +80,21 @@ async def begin(ctx: Context):
 
 @bot.command()
 async def p(ctx: Context):
-    if validSourceChannel(ctx):
+    if await validSourceChannel(ctx) and getGame(ctx.author.id):
         gameChannel = getGame(ctx.author.id)
         await currentGames[gameChannel].pick(ctx)
 
 
 @bot.command()
 async def v(ctx: Context):
-    if validSourceChannel(ctx):
+    if await validSourceChannel(ctx) and getGame(ctx.author.id):
         gameChannel = getGame(ctx.author.id)
         await currentGames[gameChannel].vote(ctx)
 
 
 @bot.command()
 async def see(ctx: Context):
-    if validSourceChannel(ctx):
+    if await validSourceChannel(ctx) and getGame(ctx.author.id):
         gameChannel = getGame(ctx.author.id)
         await currentGames[gameChannel].see(ctx)
 

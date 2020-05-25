@@ -71,7 +71,7 @@ class PolicyPile:
 
     def acceptPolicy(self, policy: Policy):
         # TODO: define exception
-        if self.__cardsInPlay.count(policy) != 2 or len(self.__cardsInPlay) != 2:
+        if self.__cardsInPlay.count(policy) == 0 or len(self.__cardsInPlay) != 2:
             raise Exception
         self.__cardsInPlay.remove(policy)
         self.__discardPile.append(self.__cardsInPlay)
