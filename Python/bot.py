@@ -99,6 +99,13 @@ async def see(ctx: Context):
         await currentGames[gameChannel].see(ctx)
 
 
+@bot.command()
+async def veto(ctx: Context):
+    if await validSourceChannel(ctx) and getGame(ctx.author.id):
+        gameChannel = getGame(ctx.author.id)
+        await currentGames[gameChannel].veto(ctx)
+
+
 def checkGames(channelID: int) -> bool:
     return channelID in currentGames.keys()
 

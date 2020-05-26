@@ -63,6 +63,10 @@ class Board:
         self.__liberalPolicies = 0
 
     @property
+    def playerCount(self) -> BoardType:
+        return self.__playerCount
+
+    @property
     def type(self) -> BoardType:
         return self.__type
 
