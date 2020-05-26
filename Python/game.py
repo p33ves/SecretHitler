@@ -106,6 +106,13 @@ class Game:
                     await ctx.send(
                         f"Sorry {ctx.author.name}, thats an invalid nomination, please retry!"
                     )
+                elif (
+                    self.__board.type.name != "FiveToSix"
+                    and int(chancellorTag[3:-1]) == self.__prevPresidentID
+                ):
+                    await ctx.send(
+                        f"Sorry {ctx.author.name}, thats an invalid nomination, please retry!"
+                    )
                 else:
                     chancellorID = int(args[0][3:-1])
                     if self.__checkDead(chancellorID):
@@ -226,6 +233,7 @@ class Game:
                             )
                         else:
                             player.kill()
+                            self.__board.playerCount -= 1
                             await self.checkWin()
                             self.__threeFascists = True
                             await self.__channel.send(
@@ -280,6 +288,10 @@ class Game:
         if not self.__stage.value or self.__stage != GameStage.Election:
             await ctx.send(
                 f"Sorry {ctx.author.name}, thats an invalid command at the moment"
+            )
+        elif self.__checkDead(ctx.author.id):
+            await ctx.send(
+                f"Sorry {ctx.author.name}, you cannot vote because you are dead."
             )
         else:
             args = ctx.message.content.split()[1:]
@@ -384,6 +396,12 @@ class Game:
                 self.__prevPresidentID,
                 self.__prevChancellorID,
                 self.__power,
+            )
+
+    async def veto(self, ctx: Context):
+        if self.__power != Power.killVeto or self.president.id != ctx.author.id:
+            await self.__channel.send(
+                f"Sorry {ctx.author.name}, you don't have the power to veto!"
             )
 
     async def checkWin(self, fascistPolicies=0, liberalPolicies=0):
