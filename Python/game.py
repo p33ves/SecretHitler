@@ -165,6 +165,8 @@ class Game:
                     liberalPolicies,
                 ) = self.__board.endLegislation(pickedPolicy)
                 await self.checkWin(fascistPolicies, liberalPolicies)
+                if self.__stage == GameStage.Completed:
+                    return GameStage.Completed
                 if fascistPolicies <= 3:
                     self.__threeFascists = True
                 self.__board.clearEdit()
@@ -235,9 +237,11 @@ class Game:
                             player.kill()
                             self.__board.playerCount -= 1
                             await self.checkWin()
+                            if self.__stage == GameStage.Completed:
+                                return GameStage.Completed
                             self.__threeFascists = True
                             await self.__channel.send(
-                                f"{player.name} has been assassinated. RIP."
+                                f"{player.name} has been assassinated. RIP"
                             )
                     self.__nextPresident()
                     self.__stage = GameStage.Nomination
@@ -326,6 +330,9 @@ class Game:
                         desc = "Democracy prevails"
                         self.__freezePrevious(self.president.id, self.chancellor.id)
                         self.__stage = GameStage.Legislation
+                        self.checkWin()
+                        if self.__stage == GameStage.Completed:
+                            return GameStage.Completed
                     else:
                         if failCount == 3:
                             desc = f"The top policy will be drawn and placed"
@@ -352,6 +359,8 @@ class Game:
                         if fascistsCount <= 3:
                             self.__threeFascists = True
                         await self.checkWin(fascistsCount, liberalCount)
+                        if self.__stage == GameStage.Completed:
+                            return GameStage.Completed
                     await self.__channel.send(file=file_embed, embed=result_embed)
                     if self.__stage == GameStage.Nomination:
                         self.__nextPresident()
