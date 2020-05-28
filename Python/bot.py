@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from game import Game
+from game import Game, GameStage
 from static_data import colours, images
 
 
@@ -82,14 +82,16 @@ async def begin(ctx: Context):
 async def p(ctx: Context):
     if await validSourceChannel(ctx) and getGame(ctx.author.id):
         gameChannel = getGame(ctx.author.id)
-        await currentGames[gameChannel].pick(ctx)
+        ret = await currentGames[gameChannel].pick(ctx)
+        closeGame(ctx, ret)
 
 
 @bot.command()
 async def v(ctx: Context):
     if await validSourceChannel(ctx) and getGame(ctx.author.id):
         gameChannel = getGame(ctx.author.id)
-        await currentGames[gameChannel].vote(ctx)
+        ret = await currentGames[gameChannel].vote(ctx)
+        closeGame(ctx, ret)
 
 
 @bot.command()
@@ -150,6 +152,12 @@ async def validSourceChannel(ctx) -> bool:
     else:
         await ctx.send(f"Sorry {ctx.author.name}, you don't seem to be in a game")
     return False
+
+
+async def closeGame(ctx, ret):
+    if ret == GameStage.Completed:
+        await ctx.send("Thanks for playing!")
+        reset(ctx)
 
 
 def main():
