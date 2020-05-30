@@ -167,7 +167,7 @@ class Game:
                 await self.checkWin(fascistPolicies, liberalPolicies)
                 if self.__stage == GameStage.Completed:
                     return GameStage.Completed
-                if fascistPolicies <= 3:
+                if fascistPolicies > 3:
                     self.__threeFascists = True
                 self.__board.clearEdit()
                 if self.__power:
@@ -330,7 +330,8 @@ class Game:
                         desc = "Democracy prevails"
                         self.__freezePrevious(self.president.id, self.chancellor.id)
                         self.__stage = GameStage.Legislation
-                        self.checkWin()
+                        if self.__threeFascists:
+                            self.checkWin()
                         if self.__stage == GameStage.Completed:
                             return GameStage.Completed
                     else:
@@ -356,7 +357,7 @@ class Game:
                             fascistsCount,
                             liberalCount,
                         ) = await self.__board.failedElectionReset(self.__channel)
-                        if fascistsCount <= 3:
+                        if fascistsCount > 3:
                             self.__threeFascists = True
                         await self.checkWin(fascistsCount, liberalCount)
                         if self.__stage == GameStage.Completed:
@@ -461,7 +462,10 @@ class Game:
         if newIndex is None:
             newIndex = self.__presidentElectIndex + 1
             while self.__players[newIndex].isDead:
-                newIndex += 1
+                if newIndex + 1 == self.__board.playerCount:
+                    newIndex = 0
+                else:
+                    newIndex += 1
         self.__presidentElectIndex = newIndex
         self.__chancellorElectID = None
 
