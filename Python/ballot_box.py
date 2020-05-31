@@ -1,10 +1,8 @@
 from enum import Enum
 
-
 class Vote(Enum):
-    nein = 0
-    ja = 1
-
+    NEIN = 0
+    JA = 1
 
 class BallotBox:
     def __init__(self):
@@ -12,10 +10,10 @@ class BallotBox:
         self.__votedNein = []
 
     def vote(self, playerId, vote: Vote):
-        if not playerId in self.__votedJa and not playerId in self.__votedNein:
-            if vote == Vote.nein:
+        if not playerId in [self.__votedJa, self.__votedNein]:
+            if vote is Vote.NEIN:
                 self.__votedNein.append(playerId)
-            elif vote == Vote.ja:
+            elif vote is Vote.JA:
                 self.__votedJa.append(playerId)
 
     def getTotalVoteCount(self) -> int:
@@ -26,18 +24,14 @@ class BallotBox:
 
     def result(self) -> Vote:
         if len(self.__votedJa) > len(self.__votedNein):
-            return Vote.ja
+            return Vote.JA
         else:
-            return Vote.nein
-
-    def clear(self):
-        self.__votedJa.clear()
-        self.__votedNein.clear()
+            return Vote.NEIN
 
     def getVote(self, id):
         if id in self.__votedJa:
-            return Vote.ja
+            return Vote.JA
         elif id in self.__votedNein:
-            return Vote.nein
+            return Vote.NEIN
         else:
             return None
