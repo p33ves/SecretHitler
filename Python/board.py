@@ -91,7 +91,7 @@ class Board:
         self.clearEdit()
         result = self.__ballotBox.result()
         voteSplit = self.__ballotBox.getVoteSplit()
-        self.__ballotBox.clear()
+        self.__ballotBox = BallotBox()
         if result == Vote.nein:
             self.__failedElection += 1
         else:
