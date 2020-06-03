@@ -4,7 +4,7 @@ from typing import List
 
 import discord
 
-from game_players import Player
+from role_player import Player
 from static_data import images, colours
 
 

@@ -65,7 +65,7 @@ class Players:
                 return True
         return False
 
-    def generateRoles(self) -> int:
+    async def generateRoles(self) -> int:
         rolesList = ["H", "L", "L", "L", "F", "L", "F", "L", "F", "L"]
         reqdRoles = rolesList[: self.count]
         random.shuffle(self.__playerList)

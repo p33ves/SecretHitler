@@ -84,8 +84,8 @@ class Board:
     async def joinBoard(self, channel, userName: str, playerCount: int):
         newEmbed = self.__messageToEdit.embeds[0].copy()
         newEmbed.set_image(url="attachment://banner.jpg")
-        newEmbed.add_field(name=playerCount + 1, value=userName)
-        newEmbed.set_footer(text=f"{playerCount+1}/10 players joined")
+        newEmbed.add_field(name=playerCount, value=userName)
+        newEmbed.set_footer(text=f"{playerCount}/10 players joined")
         await self.__messageToEdit.edit(embed=newEmbed)
 
     async def beginBoard(self, channel):

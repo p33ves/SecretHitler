@@ -17,7 +17,7 @@ class Game:
         self.__currentPower = None
         self.__dangerZone = False
 
-    def __electionDone(self):
+    async def __electionDone(self):
         self.__board.clearEdit()
         flag = self.__board.electionResult(self.__channel, self.__players)
         if flag is None:
@@ -68,7 +68,7 @@ class Game:
             self.__channel, user
         ) and await self.__board.beginBoard(self.__channel):
             self.__state = State.Nomination
-            self.__players.generateRoles()
+            await self.__players.generateRoles()
             self.__board.setType(self.__players.count)
             await self.__board.showBoard(
                 self.__channel, self.__state, self.__players, self.__currentPower
@@ -154,7 +154,7 @@ class Game:
                 self.__channel, self.__state, self.__players, self.__currentPower
             )
             if self.__players.votingComplete():
-                self.__electionDone()
+                await self.__electionDone()
 
     async def see(self, ctx: Context):
         if (

@@ -1,4 +1,5 @@
 import json
+import os
 
 import discord
 from discord.ext import commands
@@ -103,6 +104,16 @@ class Engine(commands.Cog):
             del self.__currentGames[ctx.channel.id]
         if ctx.channel.id in self.__currentUsers.keys():
             del self.__currentUsers[ctx.channel.id]
+        if os.path.exists(
+            images["currentboard.png"].replace("<channelID>", f"{ctx.channel.id}")
+        ):
+            os.remove(
+                images["currentboard.png"].replace("<channelID>", f"{ctx.channel.id}")
+            )
+        if os.path.exists(
+            images["newbase.png"].replace("<channelID>", f"{ctx.channel.id}")
+        ):
+            os.remove(images["newbase.png"].replace("<channelID>", f"{ctx.channel.id}"))
         await ctx.send(f"Game has been reset on #{ctx.channel.name}")
 
     @commands.command(
