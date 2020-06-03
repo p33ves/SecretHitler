@@ -1,19 +1,18 @@
 import random
+from collections import namedtuple
 from enum import Enum
 
 import discord
-from discord import Embed, File
 
-from static_data import images, colours
+from static_data import colours, images
 
 
 class Role(Enum):
-    Hidden = None
     Hitler = 1
     Fascist = 2
     Liberal = 3
 
-    def getRolePic(self):
+    def getRolePic(self) -> str:
         rolePics = {
             1: images["role.png"]["Hitler"],
             2: random.choice(images["role.png"]["Fascist"]),
@@ -31,7 +30,7 @@ class Role(Enum):
 class Player:
     def __init__(self, user):
         self.__user = user
-        self.__role = Role.Hidden
+        self.__role = None
         self.__isDead = False
 
     @property
@@ -40,16 +39,12 @@ class Player:
 
     @property
     def name(self) -> str:
-        # If same palyer names join the same game, need to change this into full_name
+        # TODO If same palyer names join the same game, need to change this into full_name
         return self.__user.name
 
     @property
     def avatar_url(self) -> str:
         return self.__user.avatar_url
-
-    @property
-    def dmChannelID(self) -> int:
-        return self.__user.dm_channel.id
 
     @property
     def isDead(self):
@@ -61,41 +56,41 @@ class Player:
     def setRole(self, role: Role):
         self.__role = role
 
-    async def sendRole(self, boardType, fascists, hitler):
+    async def sendRole(self, count: int, fascists: dict, hitler: namedtuple):
         if self.__role == Role.Liberal:
             desc = "For justice, liberty and equality!"
             col = "BLUE"
         elif self.__role == Role.Fascist:
             col = "ORANGE"
-            if boardType == "FiveToSix":
-                desc = f"Hitler is ***{list(hitler.values())[0]}***"
-            elif boardType == "SevenToEight":
-                desc = f"Your fellow fascist is *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{list(hitler.values())[0]}***"
+            if count < 7:
+                desc = f"Hitler is ***{hitler.name}***"
+            elif count < 9:
+                desc = f"Your fellow fascist is *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{hitler.name}***"
             else:
-                desc = f"Your fellow fascists are *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{list(hitler.values())[0]}***"
+                desc = f"Your fellow fascists are *{[val for key, val in fascists.items() if key != self.id]}*, Hitler is ***{hitler.name}***"
         else:
             col = "DARK_ORANGE"
-            if boardType == "FiveToSix":
+            if count < 7:
                 desc = f"*{list(fascists.values())[0]}* is the fascist"
             else:
                 desc = "You don't know who the other fascists are!"
-        roleEmbed = Embed(
+        roleEmbed = discord.Embed(
             title=f"You are ***{self.__role.name}***",
             colour=colours[col],
             description=desc,
         )
-        file_embed = File(self.__role.getRolePic(), filename="role.png")
+        file_embed = discord.File(self.__role.getRolePic(), filename="role.png")
         roleEmbed.set_author(name=self.name, icon_url=self.avatar_url)
         roleEmbed.set_image(url="attachment://role.png")
         await self.send(file_embed, roleEmbed)
 
     async def revealParty(self, president):
         partyName, partyPic, colour = self.__role.getParty()
-        partyEmbed = Embed(
+        partyEmbed = discord.Embed(
             title=f"{self.name} is from ***{partyName}*** party",
             colour=colours[colour],
         )
-        file_embed = File(partyPic, filename="party.png")
+        file_embed = discord.File(partyPic, filename="party.png")
         partyEmbed.set_author(name=self.name, icon_url=self.avatar_url)
         partyEmbed.set_image(url="attachment://party.png")
         await president.send(file_embed, partyEmbed)

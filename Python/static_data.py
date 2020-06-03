@@ -78,8 +78,8 @@ images = {
     "logo.png" : "./images/SecretHitlerLogo.png",
     "title.png" : "./images/plainTitle.png",
     "dot.png" : "./images/dot.png", 
-    "currentboard.png" : "./images/intermediaries/currentboard.png",
-    "newbase.png" : "./images/intermediaries/newbase.png"
+    "currentboard.png" : "./images/intermediaries/currentboard_<channelID>.png",
+    "newbase.png" : "./images/intermediaries/newbase_<channelID>.png"
 }
 
 coordinates = {
