@@ -8,9 +8,10 @@ from static_data import colours, images
 
 
 class Role(Enum):
-    Hitler = 1
-    Fascist = 2
-    Liberal = 3
+    HIDDEN = None
+    HITLER = 1
+    FASCIST = 2
+    LIBERAL = 3
 
     def getRolePic(self) -> str:
         rolePics = {
@@ -21,10 +22,10 @@ class Role(Enum):
         return rolePics[self.value]
 
     def getParty(self) -> tuple():
-        if self == Role.Liberal:
+        if self == Role.LIBERAL:
             return (self.name, images["party.png"]["Liberal"], "DARK_BLUE")
         else:
-            return (Role.Fascist.name, images["party.png"]["Fascist"], "RED")
+            return (Role.FASCIST.name, images["party.png"]["Fascist"], "RED")
 
 
 class Player:
@@ -56,11 +57,11 @@ class Player:
     def setRole(self, role: Role):
         self.__role = role
 
-    async def sendRole(self, count: int, fascists: dict, hitler: namedtuple):
-        if self.__role == Role.Liberal:
+    async def sendRole(self, boardType, fascists, hitler):
+        if self.__role == Role.LIBERAL:
             desc = "For justice, liberty and equality!"
             col = "BLUE"
-        elif self.__role == Role.Fascist:
+        elif self.__role == Role.FASCIST:
             col = "ORANGE"
             if count < 7:
                 desc = f"Hitler is ***{hitler.name}***"

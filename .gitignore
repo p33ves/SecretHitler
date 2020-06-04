@@ -6,3 +6,4 @@ images/intermediaries/**
 /node_modules/
 /Python/.idea/
 /Python/__pycache__/**
+/*.pyc
