@@ -94,6 +94,7 @@ class Board:
             "*The year is 1932. The place is pre-WWII Germany. "
             "In Secret Hitler, players are German politicians attempting to hold a fragile Liberal government together and stem the rising tide of Fascism. "
             "Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler. "
+            "There are a total of 17 policies (11 Fascist and 6 Liberal) to choose from."
             "Your roles will be sent to you as a Private Message. The future of the world depends on you."
             "So play wisely and remember, trust* ***no one.***"
         )
@@ -130,6 +131,9 @@ class Board:
             file_embed = discord.File(self.__getImage(channel.id), filename="board.png")
             tableEmbed.set_author(
                 name=players.president.name, icon_url=players.president.avatar_url
+            )
+            tableEmbed.set_footer(
+                text=f"Number of cards left in the draw pile is {self.__policyPile.noOfCardsInDeck}"
             )
             for player in players.getPlayers():
                 if not player.isDead:
