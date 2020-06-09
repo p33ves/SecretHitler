@@ -209,6 +209,7 @@ class Engine(commands.Cog):
     async def help(self, ctx: Context):
         help_embed = discord.Embed(
             title="***\t List of valid commands ***",
+            description="For any feedbacks regarding the game please reach out to *bot0.secrethitler@gmail.com* or *bot1.secrethitler@gmail.com*",
             colour=colours["LUMINOUS_VIVID_PINK"],
         )
         for cmd in self.get_commands():
