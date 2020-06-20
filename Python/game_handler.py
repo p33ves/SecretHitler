@@ -64,6 +64,11 @@ class Game:
         return False
 
     async def begin(self, user: discord.User):
+        if user.id != self.__owner.id:
+            await self.__channel.send(
+                f"Sorry {user.name}, only the game owner can begin the game"
+            )
+            return
         if await self.__players.beginGame(
             self.__channel, user
         ) and await self.__board.beginBoard(self.__channel):

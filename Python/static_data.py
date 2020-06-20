@@ -27,16 +27,16 @@ colours = {
 }
 
 images = {
-    "welcome.png" : "./images/Thumbnail.png",
-    "banner.jpg" : "./images/Banner.jpg",
-    "role.png" : {
-        "Fascist" : [
+    "welcome.png": "./images/Thumbnail.png",
+    "banner.jpg": "./images/Banner.jpg",
+    "role.png": {
+        "Fascist": [
             "./images/Role_Fascist0.png",
             "./images/Role_Fascist1.png",
             "./images/Role_Fascist2.png"
         ],
-        "Hitler" : "./images/Role_Hitler.png",
-        "Liberal" : [
+        "Hitler": "./images/Role_Hitler.png",
+        "Liberal": [
             "./images/Role_Liberal0.png",
             "./images/Role_Liberal1.png",
             "./images/Role_Liberal2.png",
@@ -45,58 +45,58 @@ images = {
             "./images/Role_Liberal5.png",
         ]
     },
-    "baseboard.png" : {
-        "FiveToSix" :  "./images/Board1.png",
-        "SevenToEight" :"./images/Board2.png",
-        "NineToTen" :"./images/Board3.png"
+    "baseboard.png": {
+        "FiveToSix":  "./images/Board1.png",
+        "SevenToEight": "./images/Board2.png",
+        "NineToTen": "./images/Board3.png"
     },
-    "policy.png" : {
-        "hidden" : "./images/Policy_Back.png",
-        "Fascist" : "./images/Policy_Fascist.png",
-        "Liberal" : "./images/Policy_Liberal.png"
+    "policy.png": {
+        "hidden": "./images/Policy_Back.png",
+        "Fascist": "./images/Policy_Fascist.png",
+        "Liberal": "./images/Policy_Liberal.png"
     },
-    "presidentdeck.png" : [
+    "presidentdeck.png": [
         "./images/PolicyBBB.png",
         "./images/PolicyBBR.png",
         "./images/PolicyBRR.png",
         "./images/PolicyRRR.png"
     ],
-    "chancellordeck.png" : [
+    "chancellordeck.png": [
         "./images/PolicyBB.png",
         "./images/PolicyBR.png",
         "./images/PolicyRR.png"
     ],
-    "party.png" : {
-        "hidden" : "./images/PartyMembership.png",
-        "Fascist" : "./images/PartyFascist.png",
-        "Liberal" : "./images/PartyLiberal.png"
+    "party.png": {
+        "hidden": "./images/PartyMembership.png",
+        "Fascist": "./images/PartyFascist.png",
+        "Liberal": "./images/PartyLiberal.png"
     },
-    "vote.png" : {
+    "vote.png": {
         "Ja": "./images/voteJa.png",
         "Nein": "./images/voteNein.png"
     },
-    "logo.png" : "./images/SecretHitlerLogo.png",
-    "title.png" : "./images/plainTitle.png",
-    "dot.png" : "./images/dot.png", 
-    "currentboard.png" : "./images/intermediaries/currentboard_<channelID>.png",
-    "newbase.png" : "./images/intermediaries/newbase_<channelID>.png"
+    "logo.png": "./images/SecretHitlerLogo.png",
+    "title.png": "./images/plainTitle.png",
+    "dot.png": "./images/dot.png",
+    "currentboard.png": "./images/intermediaries/currentboard_<channelID>.png",
+    "newbase.png": "./images/intermediaries/newbase_<channelID>.png"
 }
 
 coordinates = {
-    "failedElection" : [
+    "failedElection": [
         (364, 303),
         (472, 303),
         (581, 303),
         (690, 303)
     ],
-    "Liberal" : [
+    "Liberal": [
         (173, 90),
         (334, 90),
         (496, 90),
         (654, 90),
         (820, 90)
     ],
-    "Fascist" : [
+    "Fascist": [
         (96, 456),
         (255, 456),
         (412, 456),
