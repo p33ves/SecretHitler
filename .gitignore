@@ -1,8 +1,4 @@
 auth.json
-JavaScript/node_modules/**
 images/origin/**
 images/intermediaries/**
 .vscode/**
-/node_modules/
-/Python/.idea/
-/Python/__pycache__/**
