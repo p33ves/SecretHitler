@@ -1,4 +1,5 @@
 auth.json
-images/origin/**
-images/intermediaries/**
-.vscode/**
+images/origin/
+images/intermediaries/
+.vscode/
+project_env/
