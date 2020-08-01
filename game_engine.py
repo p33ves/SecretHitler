@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from game_engine2 import Game
+from game_handler import Game
 from static_data import colours, images
 
 
@@ -90,11 +90,10 @@ class Engine(commands.Cog):
         welcome_embed = discord.Embed(
             title="***\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
         )
-        file_embed = discord.File(
-            images["welcome.png"], filename="welcome.png")
+        file_embed = discord.File(images["welcome.png"], filename="welcome.png")
         welcome_embed.set_image(url="attachment://welcome.png")
         welcome_embed.set_footer(
-            text=f"@{ctx.author.name}'s ping is: {round(self.__bot.latency * 1000)}ms"
+            text=f"@{ctx.author.name}, your Ping is: {round(self.__bot.latency * 1000)}ms"
         )
         await ctx.send(file=file_embed, embed=welcome_embed)
 
@@ -106,18 +105,15 @@ class Engine(commands.Cog):
         if ctx.channel.id in self.__currentUsers.keys():
             del self.__currentUsers[ctx.channel.id]
         if os.path.exists(
-            images["currentboard.png"].replace(
-                "<channelID>", f"{ctx.channel.id}")
+            images["currentboard.png"].replace("<channelID>", f"{ctx.channel.id}")
         ):
             os.remove(
-                images["currentboard.png"].replace(
-                    "<channelID>", f"{ctx.channel.id}")
+                images["currentboard.png"].replace("<channelID>", f"{ctx.channel.id}")
             )
         if os.path.exists(
             images["newbase.png"].replace("<channelID>", f"{ctx.channel.id}")
         ):
-            os.remove(images["newbase.png"].replace(
-                "<channelID>", f"{ctx.channel.id}"))
+            os.remove(images["newbase.png"].replace("<channelID>", f"{ctx.channel.id}"))
         await ctx.send(f"Game has been reset on #{ctx.channel.name}")
 
     @commands.command(
@@ -218,8 +214,7 @@ class Engine(commands.Cog):
         )
         for cmd in self.get_commands():
             help_embed.add_field(name=cmd.name, value=cmd.description)
-        help_embed.set_footer(
-            text="Commands p and v require 1 mandatory parameter")
+        help_embed.set_footer(text="Commands p and v require 1 mandatory parameter")
         await ctx.send(embed=help_embed)
 
 

@@ -28,8 +28,10 @@ class Board:
         baseImg = Image.open(self.__base)
         dot = Image.open(images["dot.png"])
         new = baseImg.copy()
-        new.paste(dot, coordinates["failedElection"][self.__failedElection], dot)
-        new.save(images["currentboard.png"].replace("<channelID>", f"{id}"), "PNG")
+        new.paste(dot, coordinates["failedElection"]
+                  [self.__failedElection], dot)
+        new.save(images["currentboard.png"].replace(
+            "<channelID>", f"{id}"), "PNG")
         return images["currentboard.png"].replace("<channelID>", f"{id}")
 
     def __placePolicy(self, card: Policy, id: int) -> Power:
@@ -128,7 +130,8 @@ class Board:
             tableEmbed = discord.Embed(
                 title=f"***\t {state}*** Stage", description=desc, colour=colours[col],
             )
-            file_embed = discord.File(self.__getImage(channel.id), filename="board.png")
+            file_embed = discord.File(self.__getImage(
+                channel.id), filename="board.png")
             tableEmbed.set_author(
                 name=players.president.name, icon_url=players.president.avatar_url
             )
@@ -167,12 +170,13 @@ class Board:
                             val = "Waiting for Policy execution"
                     tableEmbed.add_field(name=player.name, value=val)
                 else:
-                    tableEmbed.add_field(name=f"~~{player.name}~~", value="Dead")
+                    tableEmbed.add_field(
+                        name=f"~~{player.name}~~", value="Dead")
             return file_embed, tableEmbed
 
         file_embed, tableEmbed = getEmbed()
         tableEmbed.set_image(url=f"attachment://{file_embed.filename}")
-        if not self.__messageToEdit:
+        if self.__messageToEdit is None:
             self.__messageToEdit = await channel.send(file=file_embed, embed=tableEmbed)
         else:
             await self.__messageToEdit.edit(embed=tableEmbed)
