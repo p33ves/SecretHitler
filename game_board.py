@@ -189,10 +189,10 @@ class Board:
         if result == Vote.NEIN:
             self.__failedElection += 1
             if self.__failedElection == 3:
-                desc = f"The top policy will be drawn and placed"
+                desc = "The top policy will be drawn and placed"
                 flag = True
             else:
-                desc = f"Failed election marker moves forward"
+                desc = "Failed election marker moves forward"
                 flag = False
             resultTitle = "\t Election *Failed*"
             col = "DARK_RED"
