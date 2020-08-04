@@ -35,6 +35,14 @@ class Players:
         return self.__hitler
 
     @property
+    def prevPresidentID(self) -> str:
+        return self.__prevPresidentID
+
+    @property
+    def prevChancellorID(self) -> str:
+        return self.__prevChancellorID
+
+    @property
     def playersAlive(self) -> list:
         alive = list()
         for player in self.__playerList:
@@ -114,11 +122,11 @@ class Players:
             return True
 
     async def beginGame(self, channel: discord.channel, user: discord.User) -> bool:
-        if self.count < 5:
+        """ if self.count < 5:
             await channel.send(
                 f"Sorry {user.name}, the game requires minimum 5 players"
             )
-            return False
+            return False """
         return True
 
     async def pickChancellor(self, ctx: Context, arg: str) -> bool:

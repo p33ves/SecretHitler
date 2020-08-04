@@ -98,11 +98,12 @@ class Board:
             "Watch out though— there are secret Fascists among you, and one of them is the Secret Hitler. "
             "There are a total of 17 policies (11 Fascist and 6 Liberal) to choose from."
             "Your roles will be sent to you as a Private Message. The future of the world depends on you."
-            "So play wisely and remember, trust ***no one.***"
+            "So play wisely and remember, trust* ***no one.***"
         )
         return True
 
     async def showBoard(self, channel, state: State, players: Players, power: Power):
+
         def getEmbed():
             if state == State.Nomination:
                 desc = f"<@!{players.president.id}>, please pick the chancellor by typing *sh!p @<candidate name>*"

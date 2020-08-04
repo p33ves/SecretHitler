@@ -79,7 +79,8 @@ class Player:
             colour=colours[col],
             description=desc,
         )
-        file_embed = discord.File(self.__role.getRolePic(), filename="role.png")
+        file_embed = discord.File(
+            self.__role.getRolePic(), filename="role.png")
         roleEmbed.set_author(name=self.name, icon_url=self.avatar_url)
         roleEmbed.set_image(url="attachment://role.png")
         await self.send(file_embed, roleEmbed)
