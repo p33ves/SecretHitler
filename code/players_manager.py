@@ -92,7 +92,7 @@ class Players:
             await player.sendRole(self.count, self.__fascists, self.__hitler)
 
     def votingComplete(self) -> bool:
-        return self.playersAlive.count == self.__ballotBox.getTotalVoteCount()
+        return len(self.playersAlive) == self.__ballotBox.getTotalVoteCount()
 
     def freezePrevious(self):
         self.__prevPresidentID = self.president.id
@@ -122,11 +122,11 @@ class Players:
             return True
 
     async def beginGame(self, channel: discord.channel, user: discord.User) -> bool:
-        """ if self.count < 5:
+        if self.count < 5:
             await channel.send(
                 f"Sorry {user.name}, the game requires minimum 5 players"
             )
-            return False """
+            return False
         return True
 
     async def pickChancellor(self, ctx: Context, arg: str) -> bool:
