@@ -90,7 +90,8 @@ class Engine(commands.Cog):
         welcome_embed = discord.Embed(
             title="***\t Welcome to Secret Hitler! ***", colour=colours["BLUE"]
         )
-        file_embed = discord.File(images["welcome.png"], filename="welcome.png")
+        file_embed = discord.File(
+            images["welcome.png"], filename="welcome.png")
         welcome_embed.set_image(url="attachment://welcome.png")
         welcome_embed.set_footer(
             text=f"@{ctx.author.name}, your Ping is: {round(self.__bot.latency * 1000)}ms"
@@ -105,15 +106,18 @@ class Engine(commands.Cog):
         if ctx.channel.id in self.__currentUsers.keys():
             del self.__currentUsers[ctx.channel.id]
         if os.path.exists(
-            images["currentboard.png"].replace("<channelID>", f"{ctx.channel.id}")
+            images["currentboard.png"].replace(
+                "<channelID>", f"{ctx.channel.id}")
         ):
             os.remove(
-                images["currentboard.png"].replace("<channelID>", f"{ctx.channel.id}")
+                images["currentboard.png"].replace(
+                    "<channelID>", f"{ctx.channel.id}")
             )
         if os.path.exists(
             images["newbase.png"].replace("<channelID>", f"{ctx.channel.id}")
         ):
-            os.remove(images["newbase.png"].replace("<channelID>", f"{ctx.channel.id}"))
+            os.remove(images["newbase.png"].replace(
+                "<channelID>", f"{ctx.channel.id}"))
         await ctx.send(f"Game has been reset on #{ctx.channel.name}")
 
     @commands.command(
@@ -180,7 +184,7 @@ class Engine(commands.Cog):
     async def v(self, ctx: Context, arg: str):
         if await self.validSourceChannel(ctx) and self.getGame(ctx.author.id):
             gameChannel = self.getGame(ctx.author.id)
-            await self.__currentGames[gameChannel].vote(ctx)
+            await self.__currentGames[gameChannel].vote(ctx, arg)
 
     @v.error
     async def vote_error(self, ctx: Context, error):
@@ -214,7 +218,8 @@ class Engine(commands.Cog):
         )
         for cmd in self.get_commands():
             help_embed.add_field(name=cmd.name, value=cmd.description)
-        help_embed.set_footer(text="Commands p and v require 1 mandatory parameter")
+        help_embed.set_footer(
+            text="Commands p and v require 1 mandatory parameter")
         await ctx.send(embed=help_embed)
 
 
