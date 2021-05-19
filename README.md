@@ -12,3 +12,8 @@
     Language used: Python3
     To install the required packages, clone the repository and use: pip install -r requirements.txt
     The bot needs an authentication token from discord stored as 'auth.json'
+
+
+## Repo structure:
+
+    images - directory contains all image files required for the game display on Discord text channel
