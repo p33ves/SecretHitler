@@ -17,3 +17,4 @@
 ## Repo structure:
 
     images - directory contains all image files required for the game display on Discord text channel
+    code - directory contains all python scripts for the bot functioning
